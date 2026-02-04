@@ -25,9 +25,9 @@ android {
             }
 
             storeFile storeFilePath
-            storePassword System.getenv("SIGNING_STORE_PASSWORD")
-            keyAlias System.getenv("SIGNING_KEY_ALIAS")
-            keyPassword System.getenv("SIGNING_KEY_PASSWORD")
+            storePassword "E:\\Android\\GBC\\keystore.jks"
+            keyAlias "E:\\Android\\GBC\\keystore.jks"
+            keyPassword "E:\\Android\\GBC\\keystore.jks"
 
             enableV1Signing true
             enableV2Signing true
