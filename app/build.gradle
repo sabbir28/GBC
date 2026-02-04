@@ -12,13 +12,19 @@ android {
         minSdk 21
         targetSdk 33
 
-        versionCode project.VERSION_CODE.toInteger()
-        versionName project.VERSION_NAME
+        versionCode VERSION_CODE.toInteger()
+        versionName VERSION_NAME
     }
 
     signingConfigs {
         release {
-            storeFile file(rootProject.file("keystore.jks"))
+            def storeFilePath = rootProject.file("keystore.jks")
+
+            if (!storeFilePath.exists()) {
+                throw new GradleException("Release keystore not found. Build aborted.")
+            }
+
+            storeFile storeFilePath
             storePassword System.getenv("SIGNING_STORE_PASSWORD")
             keyAlias System.getenv("SIGNING_KEY_ALIAS")
             keyPassword System.getenv("SIGNING_KEY_PASSWORD")
@@ -35,6 +41,7 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
+
             proguardFiles(
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
@@ -43,19 +50,23 @@ android {
 
         debug {
             debuggable true
+            signingConfig signingConfigs.release // optional but avoids split behavior
         }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled false
     }
 
     packagingOptions {
         resources {
             excludes += [
                     "META-INF/LICENSE",
-                    "META-INF/NOTICE"
+                    "META-INF/LICENSE.txt",
+                    "META-INF/NOTICE",
+                    "META-INF/NOTICE.txt"
             ]
         }
     }
