@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Primary brand (calm blue-gray) -->
-    <color name="colorPrimary">#3A5BA0</color>
-    <color name="colorPrimaryVariant">#2F4A85</color>
+    <!-- Primary brand (deep indigo) -->
+    <color name="colorPrimary">#3B4CCA</color>
+    <color name="colorPrimaryVariant">#2B39A4</color>
     <color name="colorOnPrimary">#FFFFFF</color>
 
-    <!-- Secondary / accent (soft teal) -->
-    <color name="colorSecondary">#4FB6AC</color>
-    <color name="colorSecondaryVariant">#3E9E95</color>
-    <color name="colorOnSecondary">#FFFFFF</color>
+    <!-- Secondary / accent (warm amber) -->
+    <color name="colorSecondary">#F59E0B</color>
+    <color name="colorSecondaryVariant">#D97706</color>
+    <color name="colorOnSecondary">#1F2933</color>
 
     <!-- Neutrals -->
-    <color name="colorBackground">#F5F7FA</color>
+    <color name="colorBackground">#F8FAFC</color>
     <color name="colorSurface">#FFFFFF</color>
-    <color name="colorOnBackground">#1F2933</color>
-    <color name="colorOnSurface">#1F2933</color>
+    <color name="colorSurfaceVariant">#EEF2FF</color>
+    <color name="colorOnBackground">#0F172A</color>
+    <color name="colorOnSurface">#111827</color>
 
     <!-- Status colors -->
     <color name="colorError">#D32F2F</color>
