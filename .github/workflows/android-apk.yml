@@ -10,11 +10,14 @@ on:
 
 jobs:
   build:
-    name: Build Android APK
+    name: Build APK
     runs-on: ubuntu-latest
 
+    outputs:
+      has_tag: ${{ steps.check_tag.outputs.tag }}
+
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 11
@@ -24,29 +27,39 @@ jobs:
           java-version: '11'
           cache: gradle
 
-      - name: Grant execute permission
+      - name: Make Gradle executable
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      - name: Build APKs
+        run: |
+          ./gradlew assembleDebug
+          ./gradlew assembleRelease
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-
-      # Optional: keep artifacts for CI inspection
-      - name: Upload CI Artifacts
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: apk-artifacts
+          name: apk-output
           path: app/build/outputs/apk/**/*.apk
 
-      # 🚀 Publish to GitHub Releases (ONLY on tags)
-      - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: apk-output
+          path: apk
+
+      - name: Create Release & Upload APKs
         uses: softprops/action-gh-release@v2
         with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
           files: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/release/*.apk
+            apk/**/**/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
