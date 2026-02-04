@@ -60,6 +60,9 @@ public final class HomeActivity extends AppCompatActivity {
     private MaterialCardView cardCurrentClass;
     private RecyclerView rvUpcoming;
     private RecyclerView rvPrevious;
+    private TextView tvCurrentSubject;
+    private TextView tvCurrentInstructor;
+    private TextView tvCurrentTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +72,9 @@ public final class HomeActivity extends AppCompatActivity {
         cardCurrentClass = findViewById(R.id.card_current_class);
         rvUpcoming = findViewById(R.id.rv_upcoming);
         rvPrevious = findViewById(R.id.rv_previous);
+        tvCurrentSubject = findViewById(R.id.tv_current_subject);
+        tvCurrentInstructor = findViewById(R.id.tv_current_instructor);
+        tvCurrentTime = findViewById(R.id.tv_current_time);
 
         rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
         rvPrevious.setLayoutManager(new LinearLayoutManager(this));
@@ -164,14 +170,17 @@ public final class HomeActivity extends AppCompatActivity {
     }
 
     private void bindCurrentClass(ScheduleItem item) {
-        ((TextView) cardCurrentClass.findViewById(R.id.tv_subject))
-                .setText(item.subject);
+        if (tvCurrentSubject != null) {
+            tvCurrentSubject.setText(item.subject);
+        }
 
-        ((TextView) cardCurrentClass.findViewById(R.id.tv_instructor))
-                .setText(item.instructor);
+        if (tvCurrentInstructor != null) {
+            tvCurrentInstructor.setText(item.instructor);
+        }
 
-        ((TextView) cardCurrentClass.findViewById(R.id.tv_time))
-                .setText(item.start + " - " + item.end);
+        if (tvCurrentTime != null) {
+            tvCurrentTime.setText(item.start + " - " + item.end);
+        }
     }
 
     private static String readFile(File file) throws IOException {
