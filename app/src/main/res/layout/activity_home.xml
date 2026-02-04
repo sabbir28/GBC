@@ -1,101 +1,148 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
     android:background="@color/colorBackground"
     tools:context=".UI.HomeActivity">
 
-    <!-- CURRENT CLASS (Hero Section) -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card_current_class"
-        style="@style/Widget.App.Card.Current"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorBackground">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:background="@color/colorSurface"
+            android:elevation="6dp"
+            android:theme="@style/ThemeOverlay.MaterialComponents.ActionBar"
+            app:navigationIcon="@drawable/ic_menu_24"
+            app:title="Today's Classes"
+            app:titleTextColor="@color/colorOnSurface"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_status"
-                style="@style/Widget.App.Chip.Status"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/content_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            android:padding="16dp"
+            android:animateLayoutChanges="true"
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- CURRENT CLASS (Hero Section) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_current_class"
+                style="@style/Widget.App.Card.Current"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_status"
+                        style="@style/Widget.App.Chip.Status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ONGOING"/>
+
+                    <TextView
+                        android:id="@+id/tv_current_subject"
+                        style="@style/TextAppearance.App.Heading"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Principles of Finance"
+                        android:paddingTop="8dp"/>
+
+                    <TextView
+                        android:id="@+id/tv_current_time"
+                        style="@style/TextAppearance.App.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="09:15 – 10:00"/>
+
+                    <TextView
+                        android:id="@+id/tv_current_instructor"
+                        style="@style/TextAppearance.App.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Monoj Halder"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- UPCOMING HEADER -->
+            <TextView
+                android:id="@+id/tv_upcoming_header"
+                style="@style/TextAppearance.App.SectionHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ONGOING"/>
+                android:text="Upcoming"
+                android:paddingTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/card_current_class"
+                app:layout_constraintStart_toStartOf="parent"/>
 
+            <!-- UPCOMING CLASSES LIST -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_upcoming"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_upcoming_header"
+                app:layout_constraintBottom_toTopOf="@id/tv_previous_header"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:listitem="@layout/item_class_upcoming"/>
+
+            <!-- PREVIOUS HEADER -->
             <TextView
-                android:id="@+id/tv_current_subject"
-                style="@style/TextAppearance.App.Heading"
-                android:layout_width="match_parent"
+                android:id="@+id/tv_previous_header"
+                style="@style/TextAppearance.App.SectionHeader"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Principles of Finance"
-                android:paddingTop="8dp"/>
+                android:text="Previous"
+                app:layout_constraintBottom_toTopOf="@id/rv_previous"
+                app:layout_constraintStart_toStartOf="parent"/>
 
-            <TextView
-                android:id="@+id/tv_current_time"
-                style="@style/TextAppearance.App.Body"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="09:15 – 10:00"/>
+            <!-- PREVIOUS CLASSES LIST -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_previous"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:listitem="@layout/item_class_previous"/>
 
-            <TextView
-                android:id="@+id/tv_current_instructor"
-                style="@style/TextAppearance.App.Body"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Monoj Halder"/>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- UPCOMING HEADER -->
-    <TextView
-        android:id="@+id/tv_upcoming_header"
-        style="@style/TextAppearance.App.SectionHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Upcoming"
-        android:paddingTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/card_current_class"
-        app:layout_constraintStart_toStartOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- UPCOMING CLASSES LIST -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_upcoming"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/tv_upcoming_header"
-        app:layout_constraintBottom_toTopOf="@id/tv_previous_header"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/item_class_upcoming"/>
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigation_view"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/colorSurface"
+        app:headerLayout="@layout/drawer_header"
+        app:itemIconTint="@color/colorOnSurface"
+        app:itemTextColor="@color/colorOnSurface"
+        app:menu="@menu/menu_drawer" />
 
-    <!-- PREVIOUS HEADER -->
-    <TextView
-        android:id="@+id/tv_previous_header"
-        style="@style/TextAppearance.App.SectionHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Previous"
-        app:layout_constraintBottom_toTopOf="@id/rv_previous"
-        app:layout_constraintStart_toStartOf="parent"/>
-
-    <!-- PREVIOUS CLASSES LIST -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_previous"
-        android:layout_width="0dp"
-        android:layout_height="120dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/item_class_previous"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.drawerlayout.widget.DrawerLayout>
