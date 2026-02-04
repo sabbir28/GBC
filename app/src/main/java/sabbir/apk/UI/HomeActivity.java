@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,19 +41,20 @@ public final class HomeActivity extends AppCompatActivity {
 
     private static final LocalTime[] SLOT_START = {
             LocalTime.of(9, 15),
-            LocalTime.of(10, 5),
-            LocalTime.of(11, 0),
-            LocalTime.of(12, 0),
-            LocalTime.of(13, 0)
+            LocalTime.of(10, 0),
+            LocalTime.of(10, 45),
+            LocalTime.of(11, 30),
+            LocalTime.of(12, 15)
     };
 
     private static final LocalTime[] SLOT_END = {
             LocalTime.of(10, 0),
-            LocalTime.of(10, 50),
-            LocalTime.of(11, 45),
-            LocalTime.of(12, 45),
-            LocalTime.of(13, 45)
+            LocalTime.of(10, 45),
+            LocalTime.of(11, 30),
+            LocalTime.of(12, 15),
+            LocalTime.of(13, 0)
     };
+
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -103,7 +105,7 @@ public final class HomeActivity extends AppCompatActivity {
         try {
             JSONObject schedule = root.getJSONObject("schedule");
 
-            DayOfWeek today = DayOfWeek.MONDAY; // TEST OVERRIDE
+            DayOfWeek today = LocalDate.now().getDayOfWeek();
             JSONArray todayArray = schedule.optJSONArray(today.name());
 
             if (todayArray == null) {
@@ -123,7 +125,7 @@ public final class HomeActivity extends AppCompatActivity {
                 ScheduleItem item = new ScheduleItem();
                 item.subject = obj.optString("subject_name", "N/A");
                 item.instructor = obj.optString("instructor_name", "N/A");
-                item.state = obj.optString("room", "-");
+                //item.state = obj.optString("room", "-");
 
                 item.start = SLOT_START[i];
                 item.end = SLOT_END[i];
