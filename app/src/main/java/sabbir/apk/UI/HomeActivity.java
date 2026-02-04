@@ -44,6 +44,7 @@ import sabbir.apk.InterNet.API.GitHub.RoutineManagerApi;
 import sabbir.apk.InterNet.Deta.ClassState;
 import sabbir.apk.InterNet.Deta.ScheduleItem;
 import sabbir.apk.R;
+import sabbir.apk.Reminder.ReminderScheduler;
 import sabbir.apk.UI.Adapter.ClassAdapter;
 
 public final class HomeActivity extends AppCompatActivity {
@@ -210,6 +211,8 @@ public final class HomeActivity extends AppCompatActivity {
                 showEmptyState("No classes today");
                 return;
             }
+
+            ReminderScheduler.scheduleTodayReminders(this, todaySchedule, LocalDate.now());
 
             startUiTicker();
         } catch (JSONException e) {
