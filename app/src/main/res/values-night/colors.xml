@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Dark theme surfaces (low luminance) -->
+    <color name="colorBackground">#0F1115</color>
+    <color name="colorSurface">#141821</color>
+    <color name="colorSurfaceVariant">#1C2230</color>
+    <color name="colorOnBackground">#E5E7EB</color>
+    <color name="colorOnSurface">#DDE1E7</color>
+
+    <!-- Muted accents for reduced eye strain -->
+    <color name="colorPrimary">#7C89D9</color>
+    <color name="colorPrimaryVariant">#6573C1</color>
+    <color name="colorSecondary">#C59B63</color>
+</resources>
