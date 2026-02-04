@@ -7,11 +7,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.appbar.MaterialToolbar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -70,6 +74,9 @@ public final class HomeActivity extends AppCompatActivity {
     private TextView tvCurrentSubject;
     private TextView tvCurrentInstructor;
     private TextView tvCurrentTime;
+    private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
+    private MaterialToolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +89,25 @@ public final class HomeActivity extends AppCompatActivity {
         tvCurrentSubject = findViewById(R.id.tv_current_subject);
         tvCurrentInstructor = findViewById(R.id.tv_current_instructor);
         tvCurrentTime = findViewById(R.id.tv_current_time);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.navigation_view);
+        toolbar = findViewById(R.id.toolbar);
+
+        setSupportActionBar(toolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this,
+                drawerLayout,
+                toolbar,
+                R.string.drawer_open,
+                R.string.drawer_close
+        );
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            drawerLayout.closeDrawers();
+            return true;
+        });
 
         rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
         rvPrevious.setLayoutManager(new LinearLayoutManager(this));
