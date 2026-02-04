@@ -1,0 +1,50 @@
+<resources>
+    <style name="TextAppearance.App.Heading" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/colorOnBackground</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.App.SectionHeader" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/colorOnBackground</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.App.ItemTitle" parent="TextAppearance.MaterialComponents.Subtitle2">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/colorOnBackground</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.App.Body" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/colorOnSurface</item>
+    </style>
+
+    <style name="Widget.App.Card.Current" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">6dp</item>
+        <item name="cardBackgroundColor">@color/colorSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.App.Card.Upcoming" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="cardBackgroundColor">@color/colorSurface</item>
+    </style>
+
+    <style name="Widget.App.Card.Previous" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">10dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">@color/colorSurface</item>
+    </style>
+
+    <style name="Widget.App.Chip.Status" parent="Widget.MaterialComponents.Chip.Entry">
+        <item name="chipBackgroundColor">@color/colorSecondary</item>
+        <item name="android:textColor">@color/colorOnSecondary</item>
+        <item name="chipIconVisible">false</item>
+    </style>
+</resources>
