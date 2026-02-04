@@ -15,6 +15,6 @@ public class ScheduleItem {
     }
 
     public boolean isPast(LocalTime now) {
-        return now.isAfter(end);
+        return !now.isBefore(end);
     }
 }

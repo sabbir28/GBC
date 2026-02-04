@@ -5,8 +5,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
@@ -20,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -42,6 +45,10 @@ public class HomeActivity extends AppCompatActivity {
     private MaterialCardView cardCurrentClass;
     private RecyclerView rvUpcoming;
     private RecyclerView rvPrevious;
+    private TextView tvCurrentSubject;
+    private TextView tvCurrentTime;
+    private TextView tvCurrentInstructor;
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +59,18 @@ public class HomeActivity extends AppCompatActivity {
         cardCurrentClass = findViewById(R.id.card_current_class);
         rvUpcoming = findViewById(R.id.rv_upcoming);
         rvPrevious = findViewById(R.id.rv_previous);
+        tvCurrentSubject = findViewById(R.id.tv_current_subject);
+        tvCurrentTime = findViewById(R.id.tv_current_time);
+        tvCurrentInstructor = findViewById(R.id.tv_current_instructor);
+
+        rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
+        rvPrevious.setLayoutManager(new LinearLayoutManager(this));
 
         File routineFile = RoutineManagerApi.getRoutineFile(getApplicationContext());
 
         if (routineFile == null || !routineFile.exists()) {
-            Log.e(TAG, "Routine file not found");
+            Log.w(TAG, "Routine file not found, loading demo schedule");
+            applyTimeState(buildDemoSchedule());
             return;
         }
 
@@ -144,6 +158,11 @@ public class HomeActivity extends AppCompatActivity {
 
         // UI contract
         cardCurrentClass.setVisibility(current == null ? View.GONE : View.VISIBLE);
+        if (current != null) {
+            tvCurrentSubject.setText(current.subject);
+            tvCurrentTime.setText(formatTimeRange(current));
+            tvCurrentInstructor.setText(current.instructor);
+        }
 
         rvUpcoming.setAdapter(
                 new ClassAdapter(upcoming, R.layout.item_class_upcoming)
@@ -152,6 +171,32 @@ public class HomeActivity extends AppCompatActivity {
         rvPrevious.setAdapter(
                 new ClassAdapter(previous, R.layout.item_class_previous)
         );
+    }
+
+    private List<ScheduleItem> buildDemoSchedule() {
+        LocalTime now = LocalTime.now();
+        List<ScheduleItem> items = new ArrayList<>();
+
+        items.add(createItem("Calculus II", "Dr. Rahman", now.minusMinutes(120), now.minusMinutes(90)));
+        items.add(createItem("Physics Lab", "A. Choudhury", now.minusMinutes(70), now.minusMinutes(40)));
+        items.add(createItem("Data Structures", "M. Hasan", now.minusMinutes(15), now.plusMinutes(30)));
+        items.add(createItem("Operating Systems", "R. Sarker", now.plusMinutes(45), now.plusMinutes(90)));
+        items.add(createItem("Software Engineering", "N. Akter", now.plusMinutes(100), now.plusMinutes(150)));
+
+        return items;
+    }
+
+    private ScheduleItem createItem(String subject, String instructor, LocalTime start, LocalTime end) {
+        ScheduleItem item = new ScheduleItem();
+        item.subject = subject;
+        item.instructor = instructor;
+        item.start = start;
+        item.end = end;
+        return item;
+    }
+
+    private String formatTimeRange(ScheduleItem item) {
+        return item.start.format(timeFormatter) + " – " + item.end.format(timeFormatter);
     }
 
     @Override

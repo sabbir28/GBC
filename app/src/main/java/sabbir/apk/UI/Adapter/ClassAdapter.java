@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import sabbir.apk.InterNet.Deta.ScheduleItem;
@@ -19,6 +20,7 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ViewHolder> 
 
     private final List<ScheduleItem> items;
     private final int layoutId;
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
     public ClassAdapter(List<ScheduleItem> items, int layoutId) {
         this.items = items;
@@ -38,11 +40,15 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ViewHolder> 
         ScheduleItem item = items.get(position);
 
         holder.subject.setText(item.subject);
-        holder.time.setText(item.start + " – " + item.end);
+        holder.time.setText(formatTimeRange(item));
 
         if (holder.instructor != null) {
             holder.instructor.setText(item.instructor);
         }
+    }
+
+    private String formatTimeRange(ScheduleItem item) {
+        return item.start.format(timeFormatter) + " – " + item.end.format(timeFormatter);
     }
 
     @Override
