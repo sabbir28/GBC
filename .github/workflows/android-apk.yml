@@ -1,65 +1,76 @@
-name: Android APK Build & Release
+name: Android APK Auto Release
 
 on:
   push:
-    branches: [ "main", "master" ]
-    tags:
-      - "v*"
-  pull_request:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    name: Build APK
+  build-and-release:
     runs-on: ubuntu-latest
 
-    outputs:
-      has_tag: ${{ steps.check_tag.outputs.tag }}
-
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up JDK 11
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '11'
           cache: gradle
 
-      - name: Make Gradle executable
+      - name: Grant Gradle permission
         run: chmod +x gradlew
 
-      - name: Build APKs
+      # --------------------------------------------------
+      # Extract versionName from Gradle
+      # --------------------------------------------------
+      - name: Extract versionName
+        id: version
         run: |
-          ./gradlew assembleDebug
-          ./gradlew assembleRelease
+          VERSION=$(grep -R "versionName" app/build.gradle* | head -n1 | sed -E 's/.*versionName[[:space:]]+"([^"]+)".*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-output
-          path: app/build/outputs/apk/**/*.apk
+      # --------------------------------------------------
+      # Create git tag if not exists
+      # --------------------------------------------------
+      - name: Create Git Tag
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag already exists. Skipping."
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
 
-  release:
-    name: Publish GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+      # --------------------------------------------------
+      # Build APKs
+      # --------------------------------------------------
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
-    steps:
-      - name: Download APKs
-        uses: actions/download-artifact@v4
-        with:
-          name: apk-output
-          path: apk
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
 
-      - name: Create Release & Upload APKs
+      # --------------------------------------------------
+      # Publish GitHub Release with auto notes
+      # --------------------------------------------------
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          generate_release_notes: true
           files: |
-            apk/**/**/*.apk
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
