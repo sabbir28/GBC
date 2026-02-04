@@ -23,6 +23,8 @@ import org.json.JSONObject;
 import sabbir.apk.InterNet.API.GitHub.RoutineManagerApi;
 import sabbir.apk.InterNet.API.Thread.GitHubExecutor;
 import sabbir.apk.InterNet.Deta.GitHubApi;
+import sabbir.apk.InterNet.Deta.ReleaseInfo;
+import sabbir.apk.InterNet.Updater.Updater;
 import sabbir.apk.UI.HomeActivity;
 import sabbir.apk.UI.NoInternetActivity;
 
@@ -96,6 +98,7 @@ public final class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(String result) {
                         Log.d(TAG, "Repo metadata fetched");
+                        checkForAppUpdate();
                         fetchRoutineFile();
                     }
 
@@ -106,6 +109,41 @@ public final class MainActivity extends AppCompatActivity {
                 }
         );
     }
+
+
+    private void checkForAppUpdate() {
+        Updater.fetchLatestReleaseAsync(new Updater.UpdateCallback() {
+
+            @Override
+            public void onSuccess(ReleaseInfo latest) {
+                String localHash =
+                        Updater.getCurrentVersionHash(getApplicationContext());
+
+                if (Updater.isUpdateRequired(localHash, latest.sha256)) {
+
+                    Updater.downloadApk(
+                            getApplicationContext(),
+                            latest.downloadUrl
+                    );
+
+                    Updater.saveCurrentVersionHash(
+                            getApplicationContext(),
+                            latest.sha256
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e(TAG, "Update check failed", e);
+            }
+        });
+    }
+
+
+
+
+
 
     private void fetchRoutineFile() {
         GitHubApi.fetchRepoContents(
