@@ -38,24 +38,10 @@ public class ClassAdapter extends RecyclerView.Adapter<ClassAdapter.ViewHolder> 
         ScheduleItem item = items.get(position);
 
         holder.subject.setText(item.subject);
-        String timeLabel;
-        if (item.start != null && item.end != null) {
-            timeLabel = item.start + " – " + item.end;
-        } else {
-            timeLabel = item.period == null ? "Scheduled" : item.period;
-        }
-
-        if (item.room != null && !item.room.trim().isEmpty()
-                && !item.room.equals("—")) {
-            timeLabel = timeLabel + " • Room " + item.room;
-        }
-        holder.time.setText(timeLabel);
+        holder.time.setText(item.start + " – " + item.end);
 
         if (holder.instructor != null) {
-            String instructor = item.instructor == null || item.instructor.trim().isEmpty()
-                    ? "TBA"
-                    : item.instructor;
-            holder.instructor.setText(instructor);
+            holder.instructor.setText(item.instructor);
         }
     }
 
