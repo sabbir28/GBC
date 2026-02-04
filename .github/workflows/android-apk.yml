@@ -1,76 +1,76 @@
-name: Android APK Auto Release
+name: Android Enterprise Release
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [ main, master ]
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up JDK
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '11'
+          java-version: 11
           cache: gradle
 
-      - name: Grant Gradle permission
-        run: chmod +x gradlew
+      - name: Validate changelog
+        run: |
+          git diff HEAD~1 --name-only | grep CHANGELOG.md || exit 1
 
-      # --------------------------------------------------
-      # Extract versionName from Gradle
-      # --------------------------------------------------
-      - name: Extract versionName
+      - name: Load version
         id: version
         run: |
-          VERSION=$(grep -R "versionName" app/build.gradle* | head -n1 | sed -E 's/.*versionName[[:space:]]+"([^"]+)".*/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          VERSION_NAME=$(grep VERSION_NAME version.properties | cut -d= -f2)
+          VERSION_CODE=$(grep VERSION_CODE version.properties | cut -d= -f2)
+          echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "code=$VERSION_CODE" >> $GITHUB_OUTPUT
 
-      # --------------------------------------------------
-      # Create git tag if not exists
-      # --------------------------------------------------
-      - name: Create Git Tag
+      - name: Increment versionCode
         run: |
-          TAG="v${{ steps.version.outputs.version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag already exists. Skipping."
-          else
-            git tag "$TAG"
-            git push origin "$TAG"
-          fi
+          sed -i "s/VERSION_CODE=${{ steps.version.outputs.code }}/VERSION_CODE=$((${{ steps.version.outputs.code }} + 1))/" version.properties
+          git commit -am "ci: bump versionCode"
+          git push
 
-      # --------------------------------------------------
-      # Build APKs
-      # --------------------------------------------------
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      - name: Grant gradle permission
+        run: chmod +x gradlew
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
+      - name: Build APKs
+        run: ./gradlew assembleProdRelease bundleProdRelease
 
-      # --------------------------------------------------
-      # Publish GitHub Release with auto notes
-      # --------------------------------------------------
+      - name: Create Git tag
+        run: |
+          TAG=v${{ steps.version.outputs.name }}
+          git tag $TAG
+          git push origin $TAG
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Release v${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.name }}
+          name: Release v${{ steps.version.outputs.name }}
           generate_release_notes: true
           files: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/prod/release/*.apk
+            app/build/outputs/bundle/prodRelease/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON }}
+          packageName: sabbir.apk
+          releaseFiles: app/build/outputs/bundle/prodRelease/*.aab
+          track: production
+          status: completed
