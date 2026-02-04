@@ -80,13 +80,13 @@ jobs:
       # ----------------------------------------------------
       # Build signed artifacts
       # ----------------------------------------------------
-      - name: Build Release APK & AAB
+      - name: Build Release APK, Debug APK & AAB
         env:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          ./gradlew clean assembleRelease bundleRelease
+          ./gradlew clean assembleRelease assembleDebug bundleRelease
 
       # ----------------------------------------------------
       # Rename outputs using app name + version
@@ -102,8 +102,20 @@ jobs:
           cp app/build/outputs/apk/release/*.apk \
             release/${APP_NAME}_${VERSION_NAME}_${VERSION_CODE}.apk
 
+          cp app/build/outputs/apk/debug/*.apk \
+            release/${APP_NAME}_${VERSION_NAME}_${VERSION_CODE}_debug.apk
+
           cp app/build/outputs/bundle/release/*.aab \
             release/${APP_NAME}_${VERSION_NAME}_${VERSION_CODE}.aab
+
+      # ----------------------------------------------------
+      # Upload build artifacts
+      # ----------------------------------------------------
+      - name: Upload APK/AAB artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-builds
+          path: release/*
 
       # ----------------------------------------------------
       # Create GitHub Release + attach artifacts
