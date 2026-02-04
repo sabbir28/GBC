@@ -1,29 +1,32 @@
 package sabbir.apk.UI;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
 import android.view.View;
 import android.widget.TextView;
 
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.appbar.MaterialToolbar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -47,8 +50,8 @@ public final class HomeActivity extends AppCompatActivity {
 
     private static final String TAG = "HomeActivity";
 
-    /* ===== MORNING SESSION (09:15 → 13:00) ===== */
-    private static final LocalTime[] SLOT_START = {
+    // Morning session time slots (you can later extract to config / resources)
+    private static final LocalTime[] SLOT_STARTS = {
             LocalTime.of(9, 15),
             LocalTime.of(10, 0),
             LocalTime.of(10, 45),
@@ -56,7 +59,7 @@ public final class HomeActivity extends AppCompatActivity {
             LocalTime.of(12, 15)
     };
 
-    private static final LocalTime[] SLOT_END = {
+    private static final LocalTime[] SLOT_ENDS = {
             LocalTime.of(10, 0),
             LocalTime.of(10, 45),
             LocalTime.of(11, 30),
@@ -64,13 +67,16 @@ public final class HomeActivity extends AppCompatActivity {
             LocalTime.of(13, 0)
     };
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final Handler tickHandler = new Handler(Looper.getMainLooper());
+    private static final DateTimeFormatter TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
 
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    private Handler uiTickHandler;
     private Runnable tickRunnable;
-    private final List<ScheduleItem> cachedItems = new ArrayList<>();
-    private boolean routineLoaded = false;
+
+    private final List<ScheduleItem> todaySchedule = new ArrayList<>();
 
     private MaterialCardView cardCurrentClass;
     private RecyclerView rvUpcoming;
@@ -85,147 +91,169 @@ public final class HomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //EdgeToEdge.enable(this); // modern edge-to-edge support
         setContentView(R.layout.activity_home);
 
-        cardCurrentClass = findViewById(R.id.card_current_class);
-        rvUpcoming = findViewById(R.id.rv_upcoming);
-        rvPrevious = findViewById(R.id.rv_previous);
-        tvCurrentSubject = findViewById(R.id.tv_current_subject);
-        tvCurrentInstructor = findViewById(R.id.tv_current_instructor);
-        tvCurrentTime = findViewById(R.id.tv_current_time);
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.navigation_view);
-        toolbar = findViewById(R.id.toolbar);
+        initViews();
+        setupToolbarAndDrawer();
+        setupRecyclerViews();
 
-        setSupportActionBar(toolbar);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this,
-                drawerLayout,
-                toolbar,
-                R.string.drawer_open,
-                R.string.drawer_close
-        );
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-
-        navigationView.setNavigationItemSelectedListener(item -> {
-            drawerLayout.closeDrawers();
-            return true;
-        });
-
-        rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
-        rvPrevious.setLayoutManager(new LinearLayoutManager(this));
-        rvUpcoming.setNestedScrollingEnabled(false);
-        rvPrevious.setNestedScrollingEnabled(false);
-
-        validateSlots();
+        validateTimeSlots();
 
         File routineFile = RoutineManagerApi.getRoutineFile(this);
-        if (routineFile == null || !routineFile.exists()) {
-            Log.e(TAG, "Routine file missing");
-            showEmptyState("Routine not available");
+        if (routineFile == null || !routineFile.exists() || !routineFile.canRead()) {
+            showErrorState("Routine file not found or inaccessible");
             return;
         }
 
         loadRoutineAsync(routineFile);
     }
 
-    /* ===== SLOT INTEGRITY CHECK ===== */
-    private void validateSlots() {
-        for (int i = 0; i < SLOT_START.length; i++) {
-            if (!SLOT_START[i].isBefore(SLOT_END[i])) {
-                throw new IllegalStateException("Invalid slot range at index " + i);
+    private void initViews() {
+        cardCurrentClass    = findViewById(R.id.card_current_class);
+        rvUpcoming          = findViewById(R.id.rv_upcoming);
+        rvPrevious          = findViewById(R.id.rv_previous);
+        tvCurrentSubject    = findViewById(R.id.tv_current_subject);
+        tvCurrentInstructor = findViewById(R.id.tv_current_instructor);
+        tvCurrentTime       = findViewById(R.id.tv_current_time);
+        drawerLayout        = findViewById(R.id.drawer_layout);
+        navigationView      = findViewById(R.id.navigation_view);
+        toolbar             = findViewById(R.id.toolbar);
+    }
+
+    private void setupToolbarAndDrawer() {
+        setSupportActionBar(toolbar);
+
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar,
+                R.string.drawer_open, R.string.drawer_close
+        );
+
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            drawerLayout.closeDrawer(GravityCompat.START, true);
+            handleNavigationItemClick(item.getItemId());
+            return true;
+        });
+    }
+
+    private void setupRecyclerViews() {
+        rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
+        rvPrevious.setLayoutManager(new LinearLayoutManager(this));
+        rvUpcoming.setNestedScrollingEnabled(false);
+        rvPrevious.setNestedScrollingEnabled(false);
+    }
+
+    private void validateTimeSlots() {
+        if (SLOT_STARTS.length != SLOT_ENDS.length) {
+            throw new IllegalStateException("Slot arrays length mismatch");
+        }
+
+        for (int i = 0; i < SLOT_STARTS.length; i++) {
+            if (!SLOT_STARTS[i].isBefore(SLOT_ENDS[i])) {
+                throw new IllegalStateException("Invalid slot: start ≥ end at index " + i);
             }
-            if (i > 0 && !SLOT_START[i].equals(SLOT_END[i - 1])) {
-                Log.w(TAG, "Non-contiguous slot at index " + i);
+            if (i > 0 && !SLOT_STARTS[i].equals(SLOT_ENDS[i - 1])) {
+                Log.w(TAG, "Warning: non-contiguous slots at index " + i);
             }
         }
     }
 
-    private void loadRoutineAsync(File file) {
-        executor.execute(() -> {
+    private void loadRoutineAsync(@NonNull File file) {
+        ioExecutor.execute(() -> {
             try {
-                JSONObject root = new JSONObject(readFile(file));
-                mainHandler.post(() -> renderToday(root));
+                String json = FileUtils.readAllText(file);
+                JSONObject root = new JSONObject(json);
+
+                mainHandler.post(() -> renderTodaySchedule(root));
             } catch (IOException | JSONException e) {
-                Log.e(TAG, "Routine load failure", e);
-                mainHandler.post(() -> showEmptyState("Routine not available"));
+                Log.e(TAG, "Failed to load routine", e);
+                mainHandler.post(() -> showErrorState("Failed to load routine"));
             }
         });
     }
 
-    private void renderToday(JSONObject root) {
+    private void renderTodaySchedule(JSONObject root) {
         try {
-            JSONObject schedule = root.getJSONObject("schedule");
-
+            JSONObject scheduleObj = root.getJSONObject("schedule");
             DayOfWeek today = LocalDate.now().getDayOfWeek();
-            JSONArray todayArray = schedule.optJSONArray(today.name());
+            JSONArray todayArray = scheduleObj.optJSONArray(today.name());
 
-            if (todayArray == null) {
-                showEmptyState("No classes today");
+            if (todayArray == null || todayArray.length() == 0) {
+                showEmptyState("No classes scheduled today");
                 return;
             }
 
-            cachedItems.clear();
+            todaySchedule.clear();
 
-            for (int i = 0; i < todayArray.length() && i < SLOT_START.length; i++) {
-                JSONObject obj = todayArray.getJSONObject(i);
+            int slotCount = Math.min(todayArray.length(), SLOT_STARTS.length);
+
+            for (int i = 0; i < slotCount; i++) {
+                JSONObject entry = todayArray.getJSONObject(i);
 
                 ScheduleItem item = new ScheduleItem();
-                item.subject = obj.optString("subject_name", "Free Period");
-                item.instructor = obj.optString("instructor_name", "-");
-                item.start = SLOT_START[i];
-                item.end = SLOT_END[i];
+                item.subject    = entry.optString("subject_name", "Free Period");
+                if (item.subject.equals("null"))
+                {
+                    item.subject = "Free Period";
+                }
+                item.instructor = entry.optString("instructor_name", "—");
+                item.start      = SLOT_STARTS[i];
+                item.end        = SLOT_ENDS[i];
 
-                cachedItems.add(item);
+                todaySchedule.add(item);
             }
 
-            if (cachedItems.isEmpty()) {
+            if (todaySchedule.isEmpty()) {
                 showEmptyState("No classes today");
                 return;
             }
 
-            routineLoaded = true;
-            startTicker();
-
+            startUiTicker();
         } catch (JSONException e) {
-            Log.e(TAG, "Invalid JSON structure", e);
-            showEmptyState("Schedule data invalid");
+            Log.e(TAG, "Invalid routine JSON structure", e);
+            showErrorState("Invalid schedule format");
         }
     }
 
-    /* ===== REAL-TIME ENGINE ===== */
-    private void startTicker() {
-        stopTicker();
+    // ──────────────────────────────────────────────
+    //               Real-time ticker
+    // ──────────────────────────────────────────────
 
+    private void startUiTicker() {
+        stopUiTicker();
+
+        uiTickHandler = new Handler(Looper.getMainLooper());
         tickRunnable = new Runnable() {
             @Override
             public void run() {
-                evaluateNow();
-                tickHandler.postDelayed(this, 1000);
+                updateUiBasedOnCurrentTime();
+                uiTickHandler.postDelayed(this, 1000);
             }
         };
 
-        tickHandler.post(tickRunnable);
+        uiTickHandler.post(tickRunnable);
     }
 
-    private void stopTicker() {
-        if (tickRunnable != null) {
-            tickHandler.removeCallbacks(tickRunnable);
+    private void stopUiTicker() {
+        if (uiTickHandler != null && tickRunnable != null) {
+            uiTickHandler.removeCallbacks(tickRunnable);
         }
     }
 
-    private void evaluateNow() {
+    private void updateUiBasedOnCurrentTime() {
         LocalTime now = LocalTime.now();
 
         ScheduleItem current = null;
         List<ScheduleItem> upcoming = new ArrayList<>();
-        List<ScheduleItem> previous = new ArrayList<>();
+        List<ScheduleItem> past = new ArrayList<>();
 
-        for (ScheduleItem item : cachedItems) {
+        for (ScheduleItem item : todaySchedule) {
             if (now.isAfter(item.end)) {
                 item.state = ClassState.PAST;
-                previous.add(item);
+                past.add(item);
             } else if (now.isBefore(item.start)) {
                 item.state = ClassState.UPCOMING;
                 upcoming.add(item);
@@ -236,105 +264,132 @@ public final class HomeActivity extends AppCompatActivity {
         }
 
         if (current != null) {
-            cardCurrentClass.setVisibility(View.VISIBLE);
-            bindCurrentClass(current, now);
+            showCurrentClass(current, now);
         } else if (!upcoming.isEmpty()) {
             showNextClass(upcoming.get(0));
         } else {
-            showDayCompleted();
+            showDayFinished();
         }
 
-        Collections.reverse(previous);
-        updateAdapters(upcoming, previous);
+        // Reverse past items so most recent is on top
+        Collections.reverse(past);
+
+        updateRecyclerViews(upcoming, past);
     }
 
-    /* ===== CURRENT CLASS ===== */
-    private void bindCurrentClass(ScheduleItem item, LocalTime now) {
-        long secondsLeft = Duration.between(now, item.end).getSeconds();
-        if (secondsLeft < 0) secondsLeft = 0;
+    private void showCurrentClass(ScheduleItem item, LocalTime now) {
+        cardCurrentClass.setVisibility(View.VISIBLE);
+
+        long secondsRemaining = Duration.between(now, item.end).getSeconds();
+        if (secondsRemaining < 0) secondsRemaining = 0;
 
         tvCurrentSubject.setText(item.subject);
         tvCurrentInstructor.setText(item.instructor);
-        tvCurrentTime.setText(formatRemaining(secondsLeft));
+        tvCurrentTime.setText(formatRemainingTime(secondsRemaining));
     }
 
-    /* ===== TIME FORMATTER ===== */
-    private String formatRemaining(long seconds) {
-        long hrs = seconds / 3600;
-        long mins = (seconds % 3600) / 60;
-        long secs = seconds % 60;
-
-        if (hrs > 0) {
-            return String.format("Ends in %02d:%02d:%02d", hrs, mins, secs);
-        } else if (mins > 0) {
-            return String.format("Ends in %02d:%02d", mins, secs);
-        } else {
-            return String.format("Ends in %02d sec", secs);
-        }
-    }
-
-    /* ===== PRE / POST STATES ===== */
     private void showNextClass(ScheduleItem next) {
         cardCurrentClass.setVisibility(View.VISIBLE);
         tvCurrentSubject.setText("Next: " + next.subject);
         tvCurrentInstructor.setText(next.instructor);
-        tvCurrentTime.setText("Starts at " + formatTime(next.start));
+        tvCurrentTime.setText("Starts at " + next.start.format(TIME_FORMATTER));
     }
 
-    private void showDayCompleted() {
+    private void showDayFinished() {
         cardCurrentClass.setVisibility(View.VISIBLE);
         tvCurrentSubject.setText("All classes completed");
         tvCurrentInstructor.setText("");
         tvCurrentTime.setText("Morning session finished");
     }
 
-    private void showEmptyState(String msg) {
+    private void showEmptyState(String message) {
         cardCurrentClass.setVisibility(View.VISIBLE);
-        tvCurrentSubject.setText(msg);
+        tvCurrentSubject.setText(message);
         tvCurrentInstructor.setText("");
         tvCurrentTime.setText("");
-        updateAdapters(new ArrayList<>(), new ArrayList<>());
+        updateRecyclerViews(new ArrayList<>(), new ArrayList<>());
     }
 
-    private void updateAdapters(List<ScheduleItem> upcoming, List<ScheduleItem> previous) {
-        rvUpcoming.setAdapter(new ClassAdapter(upcoming, R.layout.item_class_upcoming));
-        rvPrevious.setAdapter(new ClassAdapter(previous, R.layout.item_class_previous));
+    private void showErrorState(String message) {
+        showEmptyState(message);
     }
 
-    private String formatTime(LocalTime time) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
-        return time.format(formatter);
-    }
+    private void updateRecyclerViews(List<ScheduleItem> upcoming, List<ScheduleItem> past) {
+        View upcomingHeader = findViewById(R.id.tv_upcoming_header);
+        View pastHeader = findViewById(R.id.tv_previous_header);
 
-    private static String readFile(File file) throws IOException {
-        StringBuilder out = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                out.append(line);
-            }
+        if (upcoming.isEmpty()) {
+            rvUpcoming.setVisibility(View.GONE);
+            upcomingHeader.setVisibility(View.GONE);
+        } else {
+            rvUpcoming.setVisibility(View.VISIBLE);
+            upcomingHeader.setVisibility(View.VISIBLE);
+            rvUpcoming.setAdapter(new ClassAdapter(upcoming, R.layout.item_class_upcoming));
         }
-        return out.toString();
+
+        if (past.isEmpty()) {
+            rvPrevious.setVisibility(View.GONE);
+            pastHeader.setVisibility(View.GONE);
+        } else {
+            rvPrevious.setVisibility(View.VISIBLE);
+            pastHeader.setVisibility(View.VISIBLE);
+            rvPrevious.setAdapter(new ClassAdapter(past, R.layout.item_class_previous));
+        }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        executor.shutdownNow();
-        stopTicker();
+    private String formatRemainingTime(long seconds) {
+        long h = seconds / 3600;
+        long m = (seconds % 3600) / 60;
+        long s = seconds % 60;
+
+        if (h > 0) {
+            return String.format(Locale.US, "Ends in %02d:%02d:%02d", h, m, s);
+        } else if (m > 0) {
+            return String.format(Locale.US, "Ends in %02d:%02d", m, s);
+        } else {
+            return String.format(Locale.US, "Ends in %02d sec", s);
+        }
     }
+
+    private void handleNavigationItemClick(int itemId) {
+        if (itemId == R.id.menu_today) {
+            // already here → do nothing or refresh
+        } else if (itemId == R.id.menu_schedule) {
+            startActivity(new Intent(this, Schedule.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+        } else {
+            startActivity(new Intent(this, Setting.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+        }
+    }
+
+    // Lifecycle
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (routineLoaded) {
-            startTicker();
+        if (!todaySchedule.isEmpty()) {
+            startUiTicker();
         }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        stopTicker();
+        stopUiTicker();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ioExecutor.shutdownNow();
+        stopUiTicker();
+    }
+
+    // Small utility class (you can move it elsewhere)
+    private static class FileUtils {
+        static String readAllText(File file) throws IOException {
+            return new String(java.nio.file.Files.readAllBytes(file.toPath()));
+        }
     }
 }

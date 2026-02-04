@@ -8,35 +8,39 @@
 
     <application
         android:allowBackup="true"
+        android:appCategory="productivity"
+        android:banner="@color/colorPrimaryVariant"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/bm_college_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.App"
-        android:appCategory="productivity"
-        android:banner="@color/colorPrimaryVariant"
         tools:targetApi="31">
+        <activity
+            android:name=".UI.Setting"
+            android:exported="false" />
+        <activity
+            android:name=".UI.Schedule"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
-
         <activity
             android:name=".UI.HomeActivity"
             android:exported="false"
-            android:theme="@style/Theme.App"/>
+            android:theme="@style/Theme.App" />
         <activity
             android:name=".UI.NoInternetActivity"
             android:exported="false"
-            android:noHistory="true"
-            android:label="No Internet"/>
+            android:label="No Internet"
+            android:noHistory="true" />
     </application>
 
 </manifest>
