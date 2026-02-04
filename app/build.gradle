@@ -2,6 +2,12 @@ plugins {
     id "com.android.application"
 }
 
+def versionPropsFile = rootProject.file("version.properties")
+def versionProps = new Properties()
+if (versionPropsFile.exists()) {
+    versionProps.load(new FileInputStream(versionPropsFile))
+}
+
 android {
 
     namespace "sabbir.apk"
@@ -12,8 +18,8 @@ android {
         minSdk 21
         targetSdk 31
 
-        versionCode 1
-        versionName "beta"
+        versionCode (versionProps["VERSION_CODE"] ?: "1").toInteger()
+        versionName (versionProps["VERSION_NAME"] ?: "1.0.0")
     }
 
     signingConfigs {
