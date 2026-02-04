@@ -40,7 +40,7 @@ public final class HomeActivity extends AppCompatActivity {
 
     private static final String TAG = "HomeActivity";
 
-    /* ===== MORNING SLOTS (09:15 → 13:00) ===== */
+    /* ===== MORNING SESSION (09:15 → 13:00) ===== */
     private static final LocalTime[] SLOT_START = {
             LocalTime.of(9, 15),
             LocalTime.of(10, 0),
@@ -59,6 +59,10 @@ public final class HomeActivity extends AppCompatActivity {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Handler tickHandler = new Handler(Looper.getMainLooper());
+
+    private Runnable tickRunnable;
+    private final List<ScheduleItem> cachedItems = new ArrayList<>();
 
     private MaterialCardView cardCurrentClass;
     private RecyclerView rvUpcoming;
@@ -87,13 +91,14 @@ public final class HomeActivity extends AppCompatActivity {
         File routineFile = RoutineManagerApi.getRoutineFile(this);
         if (routineFile == null || !routineFile.exists()) {
             Log.e(TAG, "Routine file missing");
+            showEmptyState("Routine not available");
             return;
         }
 
         loadRoutineAsync(routineFile);
     }
 
-    /* ===== SLOT SAFETY CHECK ===== */
+    /* ===== SLOT INTEGRITY CHECK ===== */
     private void validateSlots() {
         for (int i = 0; i < SLOT_START.length; i++) {
             if (!SLOT_START[i].isBefore(SLOT_END[i])) {
@@ -124,12 +129,11 @@ public final class HomeActivity extends AppCompatActivity {
             JSONArray todayArray = schedule.optJSONArray(today.name());
 
             if (todayArray == null) {
-                Log.w(TAG, "No schedule for " + today.name());
                 showEmptyState("No classes today");
                 return;
             }
 
-            List<ScheduleItem> all = new ArrayList<>();
+            cachedItems.clear();
 
             for (int i = 0; i < todayArray.length() && i < SLOT_START.length; i++) {
                 JSONObject obj = todayArray.getJSONObject(i);
@@ -140,25 +144,45 @@ public final class HomeActivity extends AppCompatActivity {
                 item.start = SLOT_START[i];
                 item.end = SLOT_END[i];
 
-                all.add(item);
+                cachedItems.add(item);
             }
 
-            applyTimeState(all);
+            startTicker();
 
         } catch (JSONException e) {
             Log.e(TAG, "Invalid JSON structure", e);
         }
     }
 
-    private void applyTimeState(List<ScheduleItem> items) {
-        //LocalTime now = LocalTime.now();
-        LocalTime now = LocalTime.of(11, 34);
+    /* ===== REAL-TIME ENGINE ===== */
+    private void startTicker() {
+        stopTicker();
+
+        tickRunnable = new Runnable() {
+            @Override
+            public void run() {
+                evaluateNow();
+                tickHandler.postDelayed(this, 1000);
+            }
+        };
+
+        tickHandler.post(tickRunnable);
+    }
+
+    private void stopTicker() {
+        if (tickRunnable != null) {
+            tickHandler.removeCallbacks(tickRunnable);
+        }
+    }
+
+    private void evaluateNow() {
+        LocalTime now = LocalTime.now();
 
         ScheduleItem current = null;
         List<ScheduleItem> upcoming = new ArrayList<>();
         List<ScheduleItem> previous = new ArrayList<>();
 
-        for (ScheduleItem item : items) {
+        for (ScheduleItem item : cachedItems) {
             if (now.isAfter(item.end)) {
                 item.state = ClassState.PAST;
                 previous.add(item);
@@ -171,11 +195,9 @@ public final class HomeActivity extends AppCompatActivity {
             }
         }
 
-        /* ===== UI STATE RESOLUTION ===== */
-
         if (current != null) {
             cardCurrentClass.setVisibility(View.VISIBLE);
-            bindCurrentClass(current);
+            bindCurrentClass(current, now);
         } else if (!upcoming.isEmpty()) {
             showNextClass(upcoming.get(0));
         } else {
@@ -186,18 +208,32 @@ public final class HomeActivity extends AppCompatActivity {
         rvPrevious.setAdapter(new ClassAdapter(previous, R.layout.item_class_previous));
     }
 
-    /* ===== CURRENT CLASS WITH REMAINING TIME ===== */
-    private void bindCurrentClass(ScheduleItem item) {
-        LocalTime now = LocalTime.now();
-        long minutesLeft = Duration.between(now, item.end).toMinutes();
-        if (minutesLeft < 0) minutesLeft = 0;
+    /* ===== CURRENT CLASS ===== */
+    private void bindCurrentClass(ScheduleItem item, LocalTime now) {
+        long secondsLeft = Duration.between(now, item.end).getSeconds();
+        if (secondsLeft < 0) secondsLeft = 0;
 
         tvCurrentSubject.setText(item.subject);
         tvCurrentInstructor.setText(item.instructor);
-        tvCurrentTime.setText("Ends in " + minutesLeft + " min");
+        tvCurrentTime.setText(formatRemaining(secondsLeft));
     }
 
-    /* ===== BEFORE FIRST CLASS ===== */
+    /* ===== TIME FORMATTER ===== */
+    private String formatRemaining(long seconds) {
+        long hrs = seconds / 3600;
+        long mins = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+
+        if (hrs > 0) {
+            return String.format("Ends in %02d:%02d:%02d", hrs, mins, secs);
+        } else if (mins > 0) {
+            return String.format("Ends in %02d:%02d", mins, secs);
+        } else {
+            return String.format("Ends in %02d sec", secs);
+        }
+    }
+
+    /* ===== PRE / POST STATES ===== */
     private void showNextClass(ScheduleItem next) {
         cardCurrentClass.setVisibility(View.VISIBLE);
         tvCurrentSubject.setText("Next: " + next.subject);
@@ -205,7 +241,6 @@ public final class HomeActivity extends AppCompatActivity {
         tvCurrentTime.setText("Starts at " + next.start);
     }
 
-    /* ===== AFTER LAST CLASS ===== */
     private void showDayCompleted() {
         cardCurrentClass.setVisibility(View.VISIBLE);
         tvCurrentSubject.setText("All classes completed");
@@ -235,5 +270,6 @@ public final class HomeActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         executor.shutdownNow();
+        stopTicker();
     }
 }
