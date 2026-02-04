@@ -29,8 +29,11 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -67,6 +70,7 @@ public final class HomeActivity extends AppCompatActivity {
 
     private Runnable tickRunnable;
     private final List<ScheduleItem> cachedItems = new ArrayList<>();
+    private boolean routineLoaded = false;
 
     private MaterialCardView cardCurrentClass;
     private RecyclerView rvUpcoming;
@@ -111,6 +115,8 @@ public final class HomeActivity extends AppCompatActivity {
 
         rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
         rvPrevious.setLayoutManager(new LinearLayoutManager(this));
+        rvUpcoming.setNestedScrollingEnabled(false);
+        rvPrevious.setNestedScrollingEnabled(false);
 
         validateSlots();
 
@@ -143,6 +149,7 @@ public final class HomeActivity extends AppCompatActivity {
                 mainHandler.post(() -> renderToday(root));
             } catch (IOException | JSONException e) {
                 Log.e(TAG, "Routine load failure", e);
+                mainHandler.post(() -> showEmptyState("Routine not available"));
             }
         });
     }
@@ -173,10 +180,17 @@ public final class HomeActivity extends AppCompatActivity {
                 cachedItems.add(item);
             }
 
+            if (cachedItems.isEmpty()) {
+                showEmptyState("No classes today");
+                return;
+            }
+
+            routineLoaded = true;
             startTicker();
 
         } catch (JSONException e) {
             Log.e(TAG, "Invalid JSON structure", e);
+            showEmptyState("Schedule data invalid");
         }
     }
 
@@ -230,8 +244,8 @@ public final class HomeActivity extends AppCompatActivity {
             showDayCompleted();
         }
 
-        rvUpcoming.setAdapter(new ClassAdapter(upcoming, R.layout.item_class_upcoming));
-        rvPrevious.setAdapter(new ClassAdapter(previous, R.layout.item_class_previous));
+        Collections.reverse(previous);
+        updateAdapters(upcoming, previous);
     }
 
     /* ===== CURRENT CLASS ===== */
@@ -264,7 +278,7 @@ public final class HomeActivity extends AppCompatActivity {
         cardCurrentClass.setVisibility(View.VISIBLE);
         tvCurrentSubject.setText("Next: " + next.subject);
         tvCurrentInstructor.setText(next.instructor);
-        tvCurrentTime.setText("Starts at " + next.start);
+        tvCurrentTime.setText("Starts at " + formatTime(next.start));
     }
 
     private void showDayCompleted() {
@@ -279,6 +293,17 @@ public final class HomeActivity extends AppCompatActivity {
         tvCurrentSubject.setText(msg);
         tvCurrentInstructor.setText("");
         tvCurrentTime.setText("");
+        updateAdapters(new ArrayList<>(), new ArrayList<>());
+    }
+
+    private void updateAdapters(List<ScheduleItem> upcoming, List<ScheduleItem> previous) {
+        rvUpcoming.setAdapter(new ClassAdapter(upcoming, R.layout.item_class_upcoming));
+        rvPrevious.setAdapter(new ClassAdapter(previous, R.layout.item_class_previous));
+    }
+
+    private String formatTime(LocalTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
+        return time.format(formatter);
     }
 
     private static String readFile(File file) throws IOException {
@@ -296,6 +321,20 @@ public final class HomeActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         executor.shutdownNow();
+        stopTicker();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (routineLoaded) {
+            startTicker();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
         stopTicker();
     }
 }
