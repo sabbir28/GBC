@@ -9,6 +9,32 @@
     android:background="@color/colorBackground"
     tools:context=".UI.HomeActivity">
 
+    <LinearLayout
+        android:id="@+id/layout_days"
+        android:layout_width="110dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/tv_days_header"
+            style="@style/TextAppearance.App.SectionHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Days"
+            android:paddingBottom="8dp"
+            android:textAlignment="center"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_days"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            tools:listitem="@layout/item_day"/>
+    </LinearLayout>
+
     <!-- CURRENT CLASS (Hero Section) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_current_class"
@@ -16,7 +42,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/layout_days"
         app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
@@ -65,7 +91,7 @@
         android:text="Upcoming"
         android:paddingTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/card_current_class"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toEndOf="@id/layout_days"/>
 
     <!-- UPCOMING CLASSES LIST -->
     <androidx.recyclerview.widget.RecyclerView
@@ -74,7 +100,7 @@
         android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/tv_upcoming_header"
         app:layout_constraintBottom_toTopOf="@id/tv_previous_header"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/layout_days"
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_class_upcoming"/>
 
@@ -86,7 +112,7 @@
         android:layout_height="wrap_content"
         android:text="Previous"
         app:layout_constraintBottom_toTopOf="@id/rv_previous"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toEndOf="@id/layout_days"/>
 
     <!-- PREVIOUS CLASSES LIST -->
     <androidx.recyclerview.widget.RecyclerView
@@ -94,7 +120,7 @@
         android:layout_width="0dp"
         android:layout_height="120dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/layout_days"
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_class_previous"/>
 
