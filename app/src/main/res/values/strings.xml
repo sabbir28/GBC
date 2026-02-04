@@ -11,4 +11,12 @@
     <string name="schedule_room_label">Room:</string>
     <string name="schedule_instructor_empty">Instructor: —</string>
     <string name="schedule_room_empty">Room: —</string>
+    <string name="reminder_title">Class reminder</string>
+    <string name="reminder_alarm_title">Morning alarm</string>
+    <string name="reminder_subject_fallback">Upcoming class</string>
+    <string name="reminder_instructor_fallback">Instructor —</string>
+    <string name="reminder_time_fallback">Time</string>
+    <string name="reminder_instructor_label">Instructor: %1$s</string>
+    <string name="reminder_time_label">Time: %1$s</string>
+    <string name="reminder_channel_description">Notifications for class reminders and morning alarms.</string>
 </resources>
