@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="10dp">
+
+    <TextView
+        android:id="@+id/tv_entry_time"
+        style="@style/TextAppearance.App.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="09:15 – 10:00" />
+
+    <TextView
+        android:id="@+id/tv_entry_subject"
+        style="@style/TextAppearance.App.ItemTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Principles of Finance" />
+
+    <TextView
+        android:id="@+id/tv_entry_instructor"
+        style="@style/TextAppearance.App.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Instructor: Motiur Rahman" />
+
+    <TextView
+        android:id="@+id/tv_entry_room"
+        style="@style/TextAppearance.App.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Room: 202" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/colorSurfaceVariant" />
+</LinearLayout>

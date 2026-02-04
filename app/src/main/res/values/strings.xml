@@ -2,4 +2,13 @@
     <string name="app_name">BM College</string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
+    <string name="schedule_loading">Loading schedule…</string>
+    <string name="schedule_missing">Schedule not available. Please sync the routine file.</string>
+    <string name="schedule_error">Unable to read the schedule. Please try again.</string>
+    <string name="schedule_day_empty">No classes scheduled.</string>
+    <string name="schedule_free_period">Free Period</string>
+    <string name="schedule_instructor_label">Instructor:</string>
+    <string name="schedule_room_label">Room:</string>
+    <string name="schedule_instructor_empty">Instructor: —</string>
+    <string name="schedule_room_empty">Room: —</string>
 </resources>
