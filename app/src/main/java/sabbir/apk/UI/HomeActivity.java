@@ -125,7 +125,6 @@ public final class HomeActivity extends AppCompatActivity {
                 ScheduleItem item = new ScheduleItem();
                 item.subject = obj.optString("subject_name", "N/A");
                 item.instructor = obj.optString("instructor_name", "N/A");
-                //item.state = obj.optString("room", "-");
 
                 item.start = SLOT_START[i];
                 item.end = SLOT_END[i];
