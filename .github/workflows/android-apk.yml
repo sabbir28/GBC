@@ -1,4 +1,4 @@
-name: Android Build & Release Pipeline
+name: Android CI Release
 
 on:
   push:
@@ -8,25 +8,15 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
       # ----------------------------------------------------
       # Checkout
       # ----------------------------------------------------
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # ----------------------------------------------------
-      # Git identity (MANDATORY for CI commits)
-      # ----------------------------------------------------
-      - name: Configure Git identity
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       # ----------------------------------------------------
       # Java + Gradle
@@ -38,96 +28,46 @@ jobs:
           java-version: 11
           cache: gradle
 
-      - name: Grant Gradle permission
+      - name: Make Gradle executable
         run: chmod +x gradlew
 
       # ----------------------------------------------------
-      # Read + bump versions
+      # Create automatic tag
       # ----------------------------------------------------
-      - name: Read and increment versionCode
-        id: versioning
+      - name: Generate Git tag
+        id: tag
         run: |
-          VERSION_CODE=$(grep VERSION_CODE version.properties | cut -d= -f2)
-          VERSION_NAME=$(grep VERSION_NAME version.properties | cut -d= -f2)
-
-          NEXT_VERSION_CODE=$((VERSION_CODE + 1))
-
-          sed -i "s/VERSION_CODE=${VERSION_CODE}/VERSION_CODE=${NEXT_VERSION_CODE}/" version.properties
-
-          echo "version_name=${VERSION_NAME}" >> $GITHUB_OUTPUT
-          echo "version_code=${NEXT_VERSION_CODE}" >> $GITHUB_OUTPUT
-
-          git add version.properties
-          git commit -m "ci: bump versionCode to ${NEXT_VERSION_CODE}"
-          git push
+          TAG="v$(date +'%Y.%m.%d-%H%M%S')"
+          git tag $TAG
+          git push origin $TAG
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       # ----------------------------------------------------
-      # Create Git tag from versionName
+      # Build APKs (default Android debug key)
       # ----------------------------------------------------
-      - name: Create Git tag
+      - name: Build Debug & Release APK
         run: |
-          TAG="v${{ steps.versioning.outputs.version_name }}"
-          git tag -f $TAG
-          git push origin $TAG --force
+          ./gradlew clean assembleDebug assembleRelease
 
       # ----------------------------------------------------
-      # Decode signing keystore
+      # Collect artifacts
       # ----------------------------------------------------
-      - name: Decode signing keystore
+      - name: Prepare release assets
         run: |
-          echo "${{ secrets.SIGNING_KEYSTORE }}" | base64 -d > keystore.jks
-
-      # ----------------------------------------------------
-      # Build signed artifacts
-      # ----------------------------------------------------
-      - name: Build Release APK, Debug APK & AAB
-        env:
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-        run: |
-          ./gradlew clean assembleRelease assembleDebug bundleRelease
-
-      # ----------------------------------------------------
-      # Rename outputs using app name + version
-      # ----------------------------------------------------
-      - name: Normalize artifact names
-        run: |
-          APP_NAME=$(grep rootProject.name settings.gradle | cut -d\" -f2 | tr ' ' '_')
-          VERSION_NAME=${{ steps.versioning.outputs.version_name }}
-          VERSION_CODE=${{ steps.versioning.outputs.version_code }}
-
           mkdir release
-
-          cp app/build/outputs/apk/release/*.apk \
-            release/${APP_NAME}_${VERSION_NAME}_${VERSION_CODE}.apk
-
-          cp app/build/outputs/apk/debug/*.apk \
-            release/${APP_NAME}_${VERSION_NAME}_${VERSION_CODE}_debug.apk
-
-          cp app/build/outputs/bundle/release/*.aab \
-            release/${APP_NAME}_${VERSION_NAME}_${VERSION_CODE}.aab
+          cp app/build/outputs/apk/debug/*.apk release/app-debug.apk
+          cp app/build/outputs/apk/release/*.apk release/app-release.apk
 
       # ----------------------------------------------------
-      # Upload build artifacts
+      # Publish GitHub Release
       # ----------------------------------------------------
-      - name: Upload APK/AAB artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-builds
-          path: release/*
-
-      # ----------------------------------------------------
-      # Create GitHub Release + attach artifacts
-      # ----------------------------------------------------
-      - name: Publish GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.versioning.outputs.version_name }}
-          name: Release v${{ steps.versioning.outputs.version_name }}
-          generate_release_notes: true
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
           files: |
-            release/*.apk
-            release/*.aab
+            release/app-debug.apk
+            release/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
