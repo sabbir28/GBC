@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ public final class HomeActivity extends AppCompatActivity {
 
     private static final String TAG = "HomeActivity";
 
+    /* ===== MORNING SLOTS (09:15 → 13:00) ===== */
     private static final LocalTime[] SLOT_START = {
             LocalTime.of(9, 15),
             LocalTime.of(10, 0),
@@ -54,7 +56,6 @@ public final class HomeActivity extends AppCompatActivity {
             LocalTime.of(12, 15),
             LocalTime.of(13, 0)
     };
-
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -81,6 +82,8 @@ public final class HomeActivity extends AppCompatActivity {
         rvUpcoming.setLayoutManager(new LinearLayoutManager(this));
         rvPrevious.setLayoutManager(new LinearLayoutManager(this));
 
+        validateSlots();
+
         File routineFile = RoutineManagerApi.getRoutineFile(this);
         if (routineFile == null || !routineFile.exists()) {
             Log.e(TAG, "Routine file missing");
@@ -88,6 +91,18 @@ public final class HomeActivity extends AppCompatActivity {
         }
 
         loadRoutineAsync(routineFile);
+    }
+
+    /* ===== SLOT SAFETY CHECK ===== */
+    private void validateSlots() {
+        for (int i = 0; i < SLOT_START.length; i++) {
+            if (!SLOT_START[i].isBefore(SLOT_END[i])) {
+                throw new IllegalStateException("Invalid slot range at index " + i);
+            }
+            if (i > 0 && !SLOT_START[i].equals(SLOT_END[i - 1])) {
+                Log.w(TAG, "Non-contiguous slot at index " + i);
+            }
+        }
     }
 
     private void loadRoutineAsync(File file) {
@@ -110,6 +125,7 @@ public final class HomeActivity extends AppCompatActivity {
 
             if (todayArray == null) {
                 Log.w(TAG, "No schedule for " + today.name());
+                showEmptyState("No classes today");
                 return;
             }
 
@@ -118,14 +134,9 @@ public final class HomeActivity extends AppCompatActivity {
             for (int i = 0; i < todayArray.length() && i < SLOT_START.length; i++) {
                 JSONObject obj = todayArray.getJSONObject(i);
 
-                if (obj.isNull("subject_name")) {
-                    continue;
-                }
-
                 ScheduleItem item = new ScheduleItem();
-                item.subject = obj.optString("subject_name", "N/A");
-                item.instructor = obj.optString("instructor_name", "N/A");
-
+                item.subject = obj.optString("subject_name", "Free Period");
+                item.instructor = obj.optString("instructor_name", "-");
                 item.start = SLOT_START[i];
                 item.end = SLOT_END[i];
 
@@ -140,7 +151,8 @@ public final class HomeActivity extends AppCompatActivity {
     }
 
     private void applyTimeState(List<ScheduleItem> items) {
-        LocalTime now = LocalTime.of(11, 34); // TEST TIME
+        //LocalTime now = LocalTime.now();
+        LocalTime now = LocalTime.of(11, 34);
 
         ScheduleItem current = null;
         List<ScheduleItem> upcoming = new ArrayList<>();
@@ -159,29 +171,53 @@ public final class HomeActivity extends AppCompatActivity {
             }
         }
 
-        if (current == null) {
-            cardCurrentClass.setVisibility(View.GONE);
-        } else {
+        /* ===== UI STATE RESOLUTION ===== */
+
+        if (current != null) {
             cardCurrentClass.setVisibility(View.VISIBLE);
             bindCurrentClass(current);
+        } else if (!upcoming.isEmpty()) {
+            showNextClass(upcoming.get(0));
+        } else {
+            showDayCompleted();
         }
 
         rvUpcoming.setAdapter(new ClassAdapter(upcoming, R.layout.item_class_upcoming));
         rvPrevious.setAdapter(new ClassAdapter(previous, R.layout.item_class_previous));
     }
 
+    /* ===== CURRENT CLASS WITH REMAINING TIME ===== */
     private void bindCurrentClass(ScheduleItem item) {
-        if (tvCurrentSubject != null) {
-            tvCurrentSubject.setText(item.subject);
-        }
+        LocalTime now = LocalTime.now();
+        long minutesLeft = Duration.between(now, item.end).toMinutes();
+        if (minutesLeft < 0) minutesLeft = 0;
 
-        if (tvCurrentInstructor != null) {
-            tvCurrentInstructor.setText(item.instructor);
-        }
+        tvCurrentSubject.setText(item.subject);
+        tvCurrentInstructor.setText(item.instructor);
+        tvCurrentTime.setText("Ends in " + minutesLeft + " min");
+    }
 
-        if (tvCurrentTime != null) {
-            tvCurrentTime.setText(item.start + " - " + item.end);
-        }
+    /* ===== BEFORE FIRST CLASS ===== */
+    private void showNextClass(ScheduleItem next) {
+        cardCurrentClass.setVisibility(View.VISIBLE);
+        tvCurrentSubject.setText("Next: " + next.subject);
+        tvCurrentInstructor.setText(next.instructor);
+        tvCurrentTime.setText("Starts at " + next.start);
+    }
+
+    /* ===== AFTER LAST CLASS ===== */
+    private void showDayCompleted() {
+        cardCurrentClass.setVisibility(View.VISIBLE);
+        tvCurrentSubject.setText("All classes completed");
+        tvCurrentInstructor.setText("");
+        tvCurrentTime.setText("Morning session finished");
+    }
+
+    private void showEmptyState(String msg) {
+        cardCurrentClass.setVisibility(View.VISIBLE);
+        tvCurrentSubject.setText(msg);
+        tvCurrentInstructor.setText("");
+        tvCurrentTime.setText("");
     }
 
     private static String readFile(File file) throws IOException {
