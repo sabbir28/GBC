@@ -23,7 +23,7 @@ import org.json.JSONObject;
 import sabbir.apk.InterNet.API.GitHub.RoutineManagerApi;
 import sabbir.apk.InterNet.API.Thread.GitHubExecutor;
 import sabbir.apk.InterNet.Deta.GitHubApi;
-import sabbir.apk.InterNet.Deta.ReleaseInfo;
+import sabbir.apk.InterNet.Deta.ReleaseAssetInfo;
 import sabbir.apk.InterNet.Updater.Updater;
 import sabbir.apk.UI.HomeActivity;
 import sabbir.apk.UI.NoInternetActivity;
@@ -112,32 +112,41 @@ public final class MainActivity extends AppCompatActivity {
 
 
     private void checkForAppUpdate() {
-        Updater.fetchLatestReleaseAsync(new Updater.UpdateCallback() {
+        Updater.getInstalledApkSha256Async(
+                getApplicationContext(),
+                new Updater.Sha256Callback() {
 
-            @Override
-            public void onSuccess(ReleaseInfo latest) {
-                String localHash =
-                        Updater.getCurrentVersionHash(getApplicationContext());
+                    @Override
+                    public void onSuccess(String sha256) {
+                        Log.d(TAG, "Installed APK SHA256 = " + sha256);
+                        Updater.fetchLatestApkAssetAsync(
+                                new Updater.ReleaseAssetCallback() {
+                                    @Override
+                                    public void onSuccess(ReleaseAssetInfo info) {
+                                        Log.e(TAG, "Online APK SHA256 =: " + info.sha256);
 
-                if (Updater.isUpdateRequired(localHash, latest.sha256)) {
+                                        if (!sha256.equals(info.sha256))
+                                        {
+                                            Log.w(TAG, "Update required" );
 
-                    Updater.downloadApk(
-                            getApplicationContext(),
-                            latest.downloadUrl
-                    );
+                                        }
+                                    }
 
-                    Updater.saveCurrentVersionHash(
-                            getApplicationContext(),
-                            latest.sha256
-                    );
+                                    @Override
+                                    public void onFailure(Exception e) {
+
+                                    }
+                                }
+                        );
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.e(TAG, "SHA256 calculation failed", e);
+                    }
                 }
-            }
+        );
 
-            @Override
-            public void onFailure(Exception e) {
-                Log.e(TAG, "Update check failed", e);
-            }
-        });
     }
 
 
