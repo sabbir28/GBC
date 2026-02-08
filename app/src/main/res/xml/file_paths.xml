@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+
+    <!--
+        Very common & safe choice for downloaded updates:
+        allows access to files in the app's internal "files" directory
+    -->
+    <files-path
+        name="updates"
+        path="." />
+
+    <!--
+        Alternative / more restrictive (recommended):
+        only allow files inside a subfolder called "updates"
+    -->
+    <!--
+    <files-path
+        name="updates"
+        path="updates/" />
+    -->
+
+</paths>

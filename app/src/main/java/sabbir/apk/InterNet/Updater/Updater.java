@@ -1,6 +1,7 @@
 package sabbir.apk.InterNet.Updater;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,11 +19,15 @@ import sabbir.apk.InterNet.Deta.ReleaseAssetInfo;
 
 public final class Updater {
 
-    private static final String API_URL =
-            "https://api.github.com/repos/sabbir28/GBC/releases/latest";
+    private static final String API_URL = "https://api.github.com/repos/sabbir28/GBC/releases/latest";
 
     private static final String PREFS = "updater_prefs";
     private static final String KEY_HASH = "apk_sha256";
+
+    private static final int MAX_IGNORE_COUNT = 3;
+    private static final long IGNORE_COOLDOWN_MS = 24L * 60 * 60 * 1000; // 24 hours
+    private static final String KEY_IGNORE_COUNT = "ignore_count";
+    private static final String KEY_LAST_IGNORE_TIME = "last_ignore_time";
 
     public interface Sha256Callback {
         void onSuccess(String sha256);
@@ -192,6 +197,46 @@ public final class Updater {
                     }
                 }
         );
+    }
+
+
+    public static boolean canIgnoreUpdate(Context context) {
+        SharedPreferences prefs =
+                context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+
+        int count = prefs.getInt(KEY_IGNORE_COUNT, 0);
+        long lastTime = prefs.getLong(KEY_LAST_IGNORE_TIME, 0L);
+
+        if (count >= MAX_IGNORE_COUNT) {
+            return false;
+        }
+
+        if (lastTime == 0L) {
+            return true;
+        }
+
+        long now = System.currentTimeMillis();
+        return (now - lastTime) >= IGNORE_COOLDOWN_MS;
+    }
+
+    public static void recordIgnore(Context context) {
+        SharedPreferences prefs =
+                context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+
+        int count = prefs.getInt(KEY_IGNORE_COUNT, 0);
+
+        prefs.edit()
+                .putInt(KEY_IGNORE_COUNT, count + 1)
+                .putLong(KEY_LAST_IGNORE_TIME, System.currentTimeMillis())
+                .apply();
+    }
+
+    public static void resetIgnoreState(Context context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .remove(KEY_IGNORE_COUNT)
+                .remove(KEY_LAST_IGNORE_TIME)
+                .apply();
     }
 
 

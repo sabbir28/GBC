@@ -26,7 +26,6 @@
 
     <style name="Widget.App.Card.Current" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">20dp</item>
-        <item name="cardElevation">8dp</item>
         <item name="cardBackgroundColor">@color/colorSurfaceVariant</item>
     </style>
 

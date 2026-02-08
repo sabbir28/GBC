@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/bg_dialog_round"
+    android:elevation="6dp">
+
+
+    <ImageView
+        android:id="@+id/iv_update_icon"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:contentDescription="App update icon"
+        android:src="@drawable/bm_college_logo" />
+
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Application Update"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:gravity="center"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Description -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_update_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="A newer version of this application is available.\n\n• Performance improvements\n• UI stability updates\n• General bug fixes"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="28dp" />
+
+    <!-- Actions -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_later"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginEnd="12dp"
+            android:text="Remind Later"
+            android:background="@android:color/transparent"
+            android:textColor="#444444" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_update"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:text="Update"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#2962FF" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_browser"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginEnd="12dp"
+            android:text="Remind Later"
+            android:background="@android:color/darker_gray"
+            android:textColor="#444444" />
+
+    </LinearLayout>
+
+</LinearLayout>

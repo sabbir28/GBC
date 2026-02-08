@@ -1,18 +1,36 @@
 package sabbir.apk.UI;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.PackageInstaller;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
+import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
-
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
-
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -26,10 +44,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -42,7 +64,11 @@ import java.util.concurrent.Executors;
 
 import sabbir.apk.InterNet.API.GitHub.RoutineManagerApi;
 import sabbir.apk.InterNet.Deta.ClassState;
+import sabbir.apk.InterNet.Deta.DownloadListener;
+import sabbir.apk.InterNet.Deta.ReleaseAssetInfo;
 import sabbir.apk.InterNet.Deta.ScheduleItem;
+import sabbir.apk.InterNet.Updater.DownloadService;
+import sabbir.apk.InterNet.Updater.Updater;
 import sabbir.apk.R;
 import sabbir.apk.Reminder.ReminderScheduler;
 import sabbir.apk.UI.Adapter.ClassAdapter;
@@ -51,7 +77,12 @@ public final class HomeActivity extends AppCompatActivity {
 
     private static final String TAG = "HomeActivity";
 
-    // Morning session time slots (you can later extract to config / resources)
+    private static final int REQUEST_INSTALL_PACKAGES_CODE = 9001;
+
+    private DownloadService downloadService;
+    private boolean isBound = false;
+
+    // Morning session time slots
     private static final LocalTime[] SLOT_STARTS = {
             LocalTime.of(9, 15),
             LocalTime.of(10, 0),
@@ -89,10 +120,12 @@ public final class HomeActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private MaterialToolbar toolbar;
 
+    private ReleaseAssetInfo pendingUpdateAsset = null;
+    private Dialog updateDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //EdgeToEdge.enable(this); // modern edge-to-edge support
         setContentView(R.layout.activity_home);
 
         initViews();
@@ -104,10 +137,12 @@ public final class HomeActivity extends AppCompatActivity {
         File routineFile = RoutineManagerApi.getRoutineFile(this);
         if (routineFile == null || !routineFile.exists() || !routineFile.canRead()) {
             showErrorState("Routine file not found or inaccessible");
-            return;
+        } else {
+            loadRoutineAsync(routineFile);
         }
 
-        loadRoutineAsync(routineFile);
+        // Check for update once on start
+        checkForAppUpdate();
     }
 
     private void initViews() {
@@ -125,7 +160,7 @@ public final class HomeActivity extends AppCompatActivity {
     private void setupToolbarAndDrawer() {
         setSupportActionBar(toolbar);
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        androidx.appcompat.app.ActionBarDrawerToggle toggle = new androidx.appcompat.app.ActionBarDrawerToggle(
                 this, drawerLayout, toolbar,
                 R.string.drawer_open, R.string.drawer_close
         );
@@ -151,13 +186,9 @@ public final class HomeActivity extends AppCompatActivity {
         if (SLOT_STARTS.length != SLOT_ENDS.length) {
             throw new IllegalStateException("Slot arrays length mismatch");
         }
-
         for (int i = 0; i < SLOT_STARTS.length; i++) {
             if (!SLOT_STARTS[i].isBefore(SLOT_ENDS[i])) {
                 throw new IllegalStateException("Invalid slot: start ≥ end at index " + i);
-            }
-            if (i > 0 && !SLOT_STARTS[i].equals(SLOT_ENDS[i - 1])) {
-                Log.w(TAG, "Warning: non-contiguous slots at index " + i);
             }
         }
     }
@@ -165,15 +196,25 @@ public final class HomeActivity extends AppCompatActivity {
     private void loadRoutineAsync(@NonNull File file) {
         ioExecutor.execute(() -> {
             try {
-                String json = FileUtils.readAllText(file);
+                String json = readFileToString(file);
                 JSONObject root = new JSONObject(json);
-
                 mainHandler.post(() -> renderTodaySchedule(root));
-            } catch (IOException | JSONException e) {
+            } catch (Exception e) {
                 Log.e(TAG, "Failed to load routine", e);
                 mainHandler.post(() -> showErrorState("Failed to load routine"));
             }
         });
+    }
+
+    private String readFileToString(File file) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        }
+        return sb.toString();
     }
 
     private void renderTodaySchedule(JSONObject root) {
@@ -196,8 +237,7 @@ public final class HomeActivity extends AppCompatActivity {
 
                 ScheduleItem item = new ScheduleItem();
                 item.subject    = entry.optString("subject_name", "Free Period");
-                if (item.subject.equals("null"))
-                {
+                if ("null".equals(item.subject)) {
                     item.subject = "Free Period";
                 }
                 item.instructor = entry.optString("instructor_name", "—");
@@ -222,7 +262,7 @@ public final class HomeActivity extends AppCompatActivity {
     }
 
     // ──────────────────────────────────────────────
-    //               Real-time ticker
+    //               Real-time UI ticker
     // ──────────────────────────────────────────────
 
     private void startUiTicker() {
@@ -274,15 +314,12 @@ public final class HomeActivity extends AppCompatActivity {
             showDayFinished();
         }
 
-        // Reverse past items so most recent is on top
         Collections.reverse(past);
-
         updateRecyclerViews(upcoming, past);
     }
 
     private void showCurrentClass(ScheduleItem item, LocalTime now) {
         cardCurrentClass.setVisibility(View.VISIBLE);
-
         long secondsRemaining = Duration.between(now, item.end).getSeconds();
         if (secondsRemaining < 0) secondsRemaining = 0;
 
@@ -319,23 +356,23 @@ public final class HomeActivity extends AppCompatActivity {
 
     private void updateRecyclerViews(List<ScheduleItem> upcoming, List<ScheduleItem> past) {
         View upcomingHeader = findViewById(R.id.tv_upcoming_header);
-        View pastHeader = findViewById(R.id.tv_previous_header);
+        View pastHeader     = findViewById(R.id.tv_previous_header);
 
         if (upcoming.isEmpty()) {
             rvUpcoming.setVisibility(View.GONE);
-            upcomingHeader.setVisibility(View.GONE);
+            if (upcomingHeader != null) upcomingHeader.setVisibility(View.GONE);
         } else {
             rvUpcoming.setVisibility(View.VISIBLE);
-            upcomingHeader.setVisibility(View.VISIBLE);
+            if (upcomingHeader != null) upcomingHeader.setVisibility(View.VISIBLE);
             rvUpcoming.setAdapter(new ClassAdapter(upcoming, R.layout.item_class_upcoming));
         }
 
         if (past.isEmpty()) {
             rvPrevious.setVisibility(View.GONE);
-            pastHeader.setVisibility(View.GONE);
+            if (pastHeader != null) pastHeader.setVisibility(View.GONE);
         } else {
             rvPrevious.setVisibility(View.VISIBLE);
-            pastHeader.setVisibility(View.VISIBLE);
+            if (pastHeader != null) pastHeader.setVisibility(View.VISIBLE);
             rvPrevious.setAdapter(new ClassAdapter(past, R.layout.item_class_previous));
         }
     }
@@ -356,7 +393,7 @@ public final class HomeActivity extends AppCompatActivity {
 
     private void handleNavigationItemClick(int itemId) {
         if (itemId == R.id.menu_today) {
-            // already here → do nothing or refresh
+            // already here
         } else if (itemId == R.id.menu_schedule) {
             startActivity(new Intent(this, Schedule.class)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
@@ -366,7 +403,248 @@ public final class HomeActivity extends AppCompatActivity {
         }
     }
 
-    // Lifecycle
+    // ──────────────────────────────────────────────
+    //               Self-update logic
+    // ──────────────────────────────────────────────
+
+    private void checkForAppUpdate() {
+        Updater.getInstalledApkSha256Async(this, new Updater.Sha256Callback() {
+            @Override
+            public void onSuccess(String installedSha256) {
+                Updater.fetchLatestApkAssetAsync(new Updater.ReleaseAssetCallback() {
+                    @Override
+                    public void onSuccess(ReleaseAssetInfo latest) {
+                        if (!installedSha256.equals(latest.sha256)) {
+                            Log.i(TAG, "Update available - SHA mismatch");
+                            pendingUpdateAsset = latest;
+                            runOnUiThread(() -> showUpdateDialog(latest));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.w(TAG, "Failed to fetch latest release", e);
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e(TAG, "Cannot compute installed APK hash", e);
+            }
+        });
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void showUpdateDialog(ReleaseAssetInfo latest) {
+        if (updateDialog != null && updateDialog.isShowing()) {
+            return;
+        }
+
+        updateDialog = new Dialog(this);
+        updateDialog.setContentView(R.layout.dialog_update);
+        updateDialog.setCancelable(false);
+
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int width = (int) (dm.widthPixels * 0.92f);
+
+        Window window = updateDialog.getWindow();
+        if (window != null) {
+            window.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            window.setDimAmount(0.45f);
+        }
+
+        ImageView ivIcon      = updateDialog.findViewById(R.id.iv_update_icon);
+        TextView tvInfo       = updateDialog.findViewById(R.id.tv_update_info);
+        Button btnLater       = updateDialog.findViewById(R.id.btn_later);
+        Button btnUpdate      = updateDialog.findViewById(R.id.btn_update);  // We'll repurpose this as "In App"
+
+        // NEW: Add a second update button for browser
+        Button btnBrowser     = updateDialog.findViewById(R.id.btn_browser); // ← you need to add this in layout
+
+        if (tvInfo == null || btnLater == null || btnUpdate == null) {
+            Log.w(TAG, "Update dialog layout missing required views");
+            return;
+        }
+
+        // If you didn't add btn_browser yet, this will be null → handle gracefully or crash in dev
+        boolean hasBrowserButton = (btnBrowser != null);
+
+        tvInfo.setText(
+                "New version available!\n\n" +
+                        "Updated: " + formatTimeSince(latest.updatedAt) + "\n" +
+                        "Downloads: " + latest.downloadCount + "\n\n" +
+                        "Choose how to update:"
+        );
+
+        btnLater.setOnClickListener(v -> {
+            if (!Updater.canIgnoreUpdate(getApplicationContext())) {
+                Toast.makeText(this, "Update is required to continue", Toast.LENGTH_LONG).show();
+                return;
+            }
+            Updater.recordIgnore(getApplicationContext());
+            updateDialog.dismiss();
+            updateDialog = null;
+        });
+
+        // Button 1: Download in App (original logic)
+        btnUpdate.setText("Download in App");
+        btnUpdate.setOnClickListener(v -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!getPackageManager().canRequestPackageInstalls()) {
+                    startActivityForResult(
+                            new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                                    .setData(Uri.parse("package:" + getPackageName())),
+                            REQUEST_INSTALL_PACKAGES_CODE);
+                    return;
+                }
+            }
+
+            startDownloadService();
+            updateDialog.dismiss();
+            updateDialog = null;
+            Toast.makeText(this, "Downloading update in background...", Toast.LENGTH_SHORT).show();
+        });
+
+        // Button 2: Open in Browser
+        if (hasBrowserButton) {
+            btnBrowser.setVisibility(View.VISIBLE);
+            btnBrowser.setText("Open in Browser");
+            btnBrowser.setOnClickListener(v -> {
+                try {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://sabbir28.github.io/app/"));
+                    startActivity(browserIntent);
+                    updateDialog.dismiss();
+                    updateDialog = null;
+                    Toast.makeText(this, "Opening download page...", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to open browser", e);
+                }
+            });
+        } else {
+            // If you didn't add the button yet, you can fallback or log
+            Log.w(TAG, "btn_browser not found in layout → browser option disabled");
+        }
+
+        updateDialog.show();
+    }
+
+    private void startDownloadService() {
+        Intent intent = new Intent(this, DownloadService.class);
+        ContextCompat.startForegroundService(this, intent);
+
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            downloadService = ((DownloadService.LocalBinder) binder).getService();
+            isBound = true;
+
+            downloadService.setListener(new DownloadListener() {
+                @Override
+                public void onProgress(long downloaded, long total, int percent, long remaining) {
+                    // You can show progress in notification or UI if you want
+                    Log.d(TAG, "Download progress: " + percent + "%");
+                }
+
+                @Override
+                public void onCompleted(File file) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(HomeActivity.this, "Download completed. Installing...", Toast.LENGTH_LONG).show();
+                        installApk(file);
+                    });
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(HomeActivity.this, "Download failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Download error", e);
+                    });
+                }
+            });
+
+            downloadService.startDownload(pendingUpdateAsset.downloadUrl, "update-" + System.currentTimeMillis() + ".apk");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            downloadService = null;
+            isBound = false;
+        }
+    };
+
+    private void installApk(File apkFile) {
+        if (!apkFile.exists() || !apkFile.canRead()) {
+            Toast.makeText(this, "APK file not found:\n" + apkFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Toast.makeText(this, "APK ready:\n" + apkFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+
+        Uri apkUri = Uri.fromFile(apkFile);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                apkUri = androidx.core.content.FileProvider.getUriForFile(
+                        this,
+                        getPackageName() + ".fileprovider",
+                        apkFile
+                );
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, "FileProvider failed - check manifest & xml", e);
+                Toast.makeText(this, "Install setup error - contact developer", Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        Intent installIntent = new Intent(Intent.ACTION_VIEW)
+                .setDataAndType(apkUri, "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        try {
+            startActivity(installIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot start installer:\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Install intent failed", e);
+        }
+    }
+
+    private String formatTimeSince(String isoUtcTime) {
+        try {
+            Instant updated = Instant.parse(isoUtcTime);
+            Instant now = Instant.now();
+            long minutes = Duration.between(updated, now).toMinutes();
+
+            if (minutes < 60) return minutes + " min ago";
+            long hours = minutes / 60;
+            if (hours < 24) return hours + " hr ago";
+            long days = hours / 24;
+            return days + " days ago";
+        } catch (Exception e) {
+            return "Unknown date";
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_INSTALL_PACKAGES_CODE) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (getPackageManager().canRequestPackageInstalls()) {
+                    // Now we can install
+                    startDownloadService();
+                } else {
+                    Toast.makeText(this, "Permission denied. Cannot install updates.", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
 
     @Override
     protected void onStart() {
@@ -385,14 +663,14 @@ public final class HomeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (isBound && downloadService != null) {
+            unbindService(connection);
+            isBound = false;
+        }
+        if (updateDialog != null && updateDialog.isShowing()) {
+            updateDialog.dismiss();
+        }
         ioExecutor.shutdownNow();
         stopUiTicker();
-    }
-
-    // Small utility class (you can move it elsewhere)
-    private static class FileUtils {
-        static String readAllText(File file) throws IOException {
-            return new String(java.nio.file.Files.readAllBytes(file.toPath()));
-        }
     }
 }
