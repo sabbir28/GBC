@@ -243,7 +243,6 @@ public final class HomeActivity extends AppCompatActivity {
                 item.instructor = entry.optString("instructor_name", "—");
                 item.start      = SLOT_STARTS[i];
                 item.end        = SLOT_ENDS[i];
-
                 todaySchedule.add(item);
             }
 
