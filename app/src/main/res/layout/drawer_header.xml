@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="You're all set — your route is here."
+        android:text="@string/drawer_subtitle_default"
         android:textAppearance="@style/TextAppearance.App.Body"
         android:textColor="@color/colorOnSurface" />
 

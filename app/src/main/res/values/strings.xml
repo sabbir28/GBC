@@ -19,4 +19,22 @@
     <string name="reminder_instructor_label">Instructor: %1$s</string>
     <string name="reminder_time_label">Time: %1$s</string>
     <string name="reminder_channel_description">Notifications for class reminders and morning alarms.</string>
+    <string name="menu_today">Today</string>
+    <string name="menu_schedule">Full Schedule</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_registration">Registration</string>
+    <string name="drawer_subtitle_default">You're all set — your route is here.</string>
+    <string name="registration_title">Registration</string>
+    <string name="registration_optional_login_title">Optional Login &amp; Registration</string>
+    <string name="registration_enable_optional_login">Enable optional login profile</string>
+    <string name="registration_hint_full_name">Full name</string>
+    <string name="registration_hint_email">Email</string>
+    <string name="registration_hint_phone">Phone</string>
+    <string name="registration_hint_department">Department / Program</string>
+    <string name="registration_save_details">Save details</string>
+    <string name="registration_saved">Profile details saved</string>
+    <string name="registration_name_required">Name is required when optional login is enabled</string>
+    <string name="registration_invalid_email">Enter a valid email address</string>
+    <string name="registration_invalid_phone">Enter a valid phone number</string>
+    <string name="registration_profile_active">Profile active</string>
 </resources>

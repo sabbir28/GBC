@@ -430,9 +430,12 @@ public final class HomeActivity extends AppCompatActivity {
             startActivity(new Intent(this, RegistrationActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
         } else {
-            startActivity(new Intent(this, Setting.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+            Log.w(TAG, "Unknown navigation item selected: " + itemId);
+            return;
         }
+
+        startActivity(new Intent(this, destination)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
     }
 
     // ──────────────────────────────────────────────
