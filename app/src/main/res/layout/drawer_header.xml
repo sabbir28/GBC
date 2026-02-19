@@ -3,23 +3,25 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/colorSurfaceVariant"
     android:orientation="vertical"
-    android:padding="20dp"
-    android:background="@color/colorSurfaceVariant">
+    android:padding="20dp">
 
     <TextView
+        android:id="@+id/tv_drawer_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/app_name"
         android:textAppearance="@style/TextAppearance.App.Heading"
-        android:textColor="@color/colorOnBackground"/>
+        android:textColor="@color/colorOnBackground" />
 
     <TextView
+        android:id="@+id/tv_drawer_subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="You're all set — your route is here."
+        android:text="@string/drawer_subtitle_default"
         android:textAppearance="@style/TextAppearance.App.Body"
-        android:textColor="@color/colorOnSurface"/>
+        android:textColor="@color/colorOnSurface" />
 
 </LinearLayout>

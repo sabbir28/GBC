@@ -40,6 +40,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.navigation.NavigationView;
 
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -131,6 +132,7 @@ public final class HomeActivity extends AppCompatActivity {
         initViews();
         setupToolbarAndDrawer();
         setupRecyclerViews();
+        refreshDrawerProfile();
 
         validateTimeSlots();
 
@@ -173,6 +175,40 @@ public final class HomeActivity extends AppCompatActivity {
             handleNavigationItemClick(item.getItemId());
             return true;
         });
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshDrawerProfile();
+    }
+
+    private void refreshDrawerProfile() {
+        View header = navigationView.getHeaderView(0);
+        TextView title = header.findViewById(R.id.tv_drawer_title);
+        TextView subtitle = header.findViewById(R.id.tv_drawer_subtitle);
+
+        refreshDrawerHeaderText(title, subtitle);
+    }
+
+
+    private void refreshDrawerHeaderText(@NonNull TextView title, @NonNull TextView subtitle) {
+        android.content.SharedPreferences prefs = UserProfilePreferences.getPrefs(this);
+        boolean loginEnabled = UserProfilePreferences.isLoginEnabled(prefs);
+        String name = UserProfilePreferences.getFullName(prefs);
+        String department = UserProfilePreferences.getDepartment(prefs);
+
+        if (loginEnabled && !name.isEmpty()) {
+            title.setText(name);
+            subtitle.setText(department.isEmpty()
+                    ? getString(R.string.registration_profile_active)
+                    : department);
+            return;
+        }
+
+        title.setText(getString(R.string.app_name));
+        subtitle.setText(getString(R.string.drawer_subtitle_default));
     }
 
     private void setupRecyclerViews() {
@@ -392,14 +428,23 @@ public final class HomeActivity extends AppCompatActivity {
 
     private void handleNavigationItemClick(int itemId) {
         if (itemId == R.id.menu_today) {
-            // already here
-        } else if (itemId == R.id.menu_schedule) {
-            startActivity(new Intent(this, Schedule.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
-        } else {
-            startActivity(new Intent(this, Setting.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+            return;
         }
+
+        Class<?> destination;
+        if (itemId == R.id.menu_schedule) {
+            destination = Schedule.class;
+        } else if (itemId == R.id.menu_registration) {
+            destination = RegistrationActivity.class;
+        } else if (itemId == R.id.menu_settings) {
+            destination = Setting.class;
+        } else {
+            Log.w(TAG, "Unknown navigation item selected: " + itemId);
+            return;
+        }
+
+        startActivity(new Intent(this, destination)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
     }
 
     // ──────────────────────────────────────────────

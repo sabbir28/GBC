@@ -3,13 +3,17 @@
     <item
         android:id="@+id/menu_today"
         android:icon="@drawable/ic_today_24"
-        android:title="Today"/>
+        android:title="@string/menu_today"/>
     <item
         android:id="@+id/menu_schedule"
         android:icon="@drawable/ic_schedule_24"
-        android:title="Full Schedule"/>
+        android:title="@string/menu_schedule"/>
     <item
         android:id="@+id/menu_settings"
         android:icon="@drawable/ic_settings_24"
-        android:title="Settings"/>
+        android:title="@string/menu_settings"/>
+    <item
+        android:id="@+id/menu_registration"
+        android:icon="@drawable/ic_person_add_24"
+        android:title="@string/menu_registration"/>
 </menu>
