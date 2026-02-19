@@ -11,9 +11,9 @@
     <item
         android:id="@+id/menu_settings"
         android:icon="@drawable/ic_settings_24"
-        android:title="@string/menu_settings"/>
+        android:title="Settings"/>
     <item
         android:id="@+id/menu_registration"
         android:icon="@drawable/ic_person_add_24"
-        android:title="@string/menu_registration"/>
+        android:title="Registration"/>
 </menu>

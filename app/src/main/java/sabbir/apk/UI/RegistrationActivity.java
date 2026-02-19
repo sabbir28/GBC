@@ -2,116 +2,79 @@ package sabbir.apk.UI;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Patterns;
+import android.text.TextUtils;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.android.material.textfield.TextInputEditText;
 
 import sabbir.apk.R;
 
 public final class RegistrationActivity extends AppCompatActivity {
 
+    public static final String USER_PREFS = "user_profile";
+    public static final String KEY_LOGIN_ENABLED = "login_enabled";
+    public static final String KEY_FULL_NAME = "full_name";
+    public static final String KEY_EMAIL = "email";
+    public static final String KEY_PHONE = "phone";
+    public static final String KEY_DEPARTMENT = "department";
+
     private SwitchMaterial switchOptionalLogin;
-    private TextInputEditText etFullName;
-    private TextInputEditText etEmail;
-    private TextInputEditText etPhone;
-    private TextInputEditText etDepartment;
+    private EditText etFullName;
+    private EditText etEmail;
+    private EditText etPhone;
+    private EditText etDepartment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registration);
 
-        setupToolbar();
-        bindViews();
-
-        SharedPreferences prefs = UserProfilePreferences.getPrefs(this);
-        populateFromPrefs(prefs);
-
-        switchOptionalLogin.setOnCheckedChangeListener((buttonView, isChecked) ->
-                updateFieldAvailability(isChecked));
-
-        Button btnSave = findViewById(R.id.btn_save_profile);
-        btnSave.setOnClickListener(v -> onSaveClicked(prefs));
-    }
-
-    private void setupToolbar() {
         MaterialToolbar toolbar = findViewById(R.id.toolbar_registration);
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(view -> finish());
-    }
 
-    private void bindViews() {
         switchOptionalLogin = findViewById(R.id.switch_optional_login);
         etFullName = findViewById(R.id.et_full_name);
         etEmail = findViewById(R.id.et_email);
         etPhone = findViewById(R.id.et_phone);
         etDepartment = findViewById(R.id.et_department);
-    }
+        Button btnSave = findViewById(R.id.btn_save_profile);
 
-    private void populateFromPrefs(@NonNull SharedPreferences prefs) {
-        switchOptionalLogin.setChecked(UserProfilePreferences.isLoginEnabled(prefs));
-        etFullName.setText(UserProfilePreferences.getFullName(prefs));
-        etEmail.setText(prefs.getString(UserProfilePreferences.KEY_EMAIL, ""));
-        etPhone.setText(prefs.getString(UserProfilePreferences.KEY_PHONE, ""));
-        etDepartment.setText(UserProfilePreferences.getDepartment(prefs));
+        SharedPreferences prefs = getSharedPreferences(USER_PREFS, MODE_PRIVATE);
+        switchOptionalLogin.setChecked(prefs.getBoolean(KEY_LOGIN_ENABLED, false));
+        etFullName.setText(prefs.getString(KEY_FULL_NAME, ""));
+        etEmail.setText(prefs.getString(KEY_EMAIL, ""));
+        etPhone.setText(prefs.getString(KEY_PHONE, ""));
+        etDepartment.setText(prefs.getString(KEY_DEPARTMENT, ""));
+
         updateFieldAvailability(switchOptionalLogin.isChecked());
-    }
 
-    private void onSaveClicked(@NonNull SharedPreferences prefs) {
-        String fullName = getTrimmedText(etFullName);
-        String email = getTrimmedText(etEmail);
-        String phone = getTrimmedText(etPhone);
-        String department = getTrimmedText(etDepartment);
-        boolean optionalLoginEnabled = switchOptionalLogin.isChecked();
+        switchOptionalLogin.setOnCheckedChangeListener((buttonView, isChecked) ->
+                updateFieldAvailability(isChecked));
 
-        if (!validateInput(optionalLoginEnabled, fullName, email, phone)) {
-            return;
-        }
+        btnSave.setOnClickListener(v -> {
+            if (switchOptionalLogin.isChecked() && TextUtils.isEmpty(etFullName.getText().toString().trim())) {
+                etFullName.setError("Name is required when optional login is enabled");
+                etFullName.requestFocus();
+                return;
+            }
 
-        UserProfilePreferences.saveProfile(
-                prefs,
-                optionalLoginEnabled,
-                fullName,
-                email,
-                phone,
-                department
-        );
+            prefs.edit()
+                    .putBoolean(KEY_LOGIN_ENABLED, switchOptionalLogin.isChecked())
+                    .putString(KEY_FULL_NAME, etFullName.getText().toString().trim())
+                    .putString(KEY_EMAIL, etEmail.getText().toString().trim())
+                    .putString(KEY_PHONE, etPhone.getText().toString().trim())
+                    .putString(KEY_DEPARTMENT, etDepartment.getText().toString().trim())
+                    .apply();
 
-        Toast.makeText(this, R.string.registration_saved, Toast.LENGTH_SHORT).show();
-        finish();
-    }
-
-    private boolean validateInput(boolean loginEnabled, String fullName, String email, String phone) {
-        if (!loginEnabled) {
-            return true;
-        }
-
-        if (fullName.isEmpty()) {
-            etFullName.setError(getString(R.string.registration_name_required));
-            etFullName.requestFocus();
-            return false;
-        }
-
-        if (!email.isEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError(getString(R.string.registration_invalid_email));
-            etEmail.requestFocus();
-            return false;
-        }
-
-        if (!phone.isEmpty() && phone.length() < 8) {
-            etPhone.setError(getString(R.string.registration_invalid_phone));
-            etPhone.requestFocus();
-            return false;
-        }
-
-        return true;
+            Toast.makeText(this, "Profile details saved", Toast.LENGTH_SHORT).show();
+            finish();
+        });
     }
 
     private void updateFieldAvailability(boolean enabled) {
@@ -119,11 +82,5 @@ public final class RegistrationActivity extends AppCompatActivity {
         etEmail.setEnabled(enabled);
         etPhone.setEnabled(enabled);
         etDepartment.setEnabled(enabled);
-    }
-
-    @NonNull
-    private String getTrimmedText(@NonNull TextInputEditText input) {
-        CharSequence value = input.getText();
-        return value == null ? "" : value.toString().trim();
     }
 }
