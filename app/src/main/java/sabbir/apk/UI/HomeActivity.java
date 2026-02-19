@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.ServiceConnection;
 import android.content.pm.PackageInstaller;
 import android.graphics.Color;
@@ -26,6 +27,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -39,6 +41,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.navigation.NavigationView;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -131,6 +134,7 @@ public final class HomeActivity extends AppCompatActivity {
         initViews();
         setupToolbarAndDrawer();
         setupRecyclerViews();
+        refreshDrawerProfile();
 
         validateTimeSlots();
 
@@ -173,6 +177,32 @@ public final class HomeActivity extends AppCompatActivity {
             handleNavigationItemClick(item.getItemId());
             return true;
         });
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshDrawerProfile();
+    }
+
+    private void refreshDrawerProfile() {
+        View header = navigationView.getHeaderView(0);
+        TextView title = header.findViewById(R.id.tv_drawer_title);
+        TextView subtitle = header.findViewById(R.id.tv_drawer_subtitle);
+
+        SharedPreferences prefs = getSharedPreferences(RegistrationActivity.USER_PREFS, MODE_PRIVATE);
+        boolean loginEnabled = prefs.getBoolean(RegistrationActivity.KEY_LOGIN_ENABLED, false);
+        String name = prefs.getString(RegistrationActivity.KEY_FULL_NAME, "");
+        String dept = prefs.getString(RegistrationActivity.KEY_DEPARTMENT, "");
+
+        if (loginEnabled && !TextUtils.isEmpty(name)) {
+            title.setText(name);
+            subtitle.setText(TextUtils.isEmpty(dept) ? "Profile active" : dept);
+        } else {
+            title.setText(getString(R.string.app_name));
+            subtitle.setText("You're all set — your route is here.");
+        }
     }
 
     private void setupRecyclerViews() {
@@ -395,6 +425,9 @@ public final class HomeActivity extends AppCompatActivity {
             // already here
         } else if (itemId == R.id.menu_schedule) {
             startActivity(new Intent(this, Schedule.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+        } else if (itemId == R.id.menu_registration) {
+            startActivity(new Intent(this, RegistrationActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
         } else {
             startActivity(new Intent(this, Setting.class)

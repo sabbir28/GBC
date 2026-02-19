@@ -38,6 +38,9 @@
             android:name=".UI.Setting"
             android:exported="false" />
         <activity
+            android:name=".UI.RegistrationActivity"
+            android:exported="false" />
+        <activity
             android:name=".UI.Schedule"
             android:exported="false" />
         <activity
