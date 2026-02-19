@@ -1,0 +1,156 @@
+{
+  "project_info": {
+    "project_number": "781215046566",
+    "firebase_url": "https://alor28-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "alor28",
+    "storage_bucket": "alor28.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781215046566:android:1fe73b897b3e6ba30e0d67",
+        "android_client_info": {
+          "package_name": "com.example.emrntoday"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlMrwi_7puEuP4rPrDtHQoHQrpiHXF9A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781215046566:android:dc5159237ba63ba40e0d67",
+        "android_client_info": {
+          "package_name": "com.mcq"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlMrwi_7puEuP4rPrDtHQoHQrpiHXF9A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781215046566:android:fe6183de387662890e0d67",
+        "android_client_info": {
+          "package_name": "io.learn.hub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlMrwi_7puEuP4rPrDtHQoHQrpiHXF9A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781215046566:android:d3d5bd4988e914ab0e0d67",
+        "android_client_info": {
+          "package_name": "org.sabbir28.music"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlMrwi_7puEuP4rPrDtHQoHQrpiHXF9A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781215046566:android:52058afdc10df6930e0d67",
+        "android_client_info": {
+          "package_name": "sabbir.apk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVlMrwi_7puEuP4rPrDtHQoHQrpiHXF9A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781215046566-34ac7nm692vr9chturniiu9mlecvnpce.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
