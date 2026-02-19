@@ -45,6 +45,19 @@ Sidebar menu now includes:
 ./gradlew assembleDebug
 ```
 
+### Troubleshooting `:app:mergeDebugResources` (`material-1.6.1`)
+
+If you hit a build error caused by an invalid string like `{str}` inside a
+transformed Material dependency file in your local Gradle cache, run:
+
+```bash
+./gradlew repairMaterialTransformCache assembleDebug --refresh-dependencies
+```
+
+This project includes `repairMaterialTransformCache`, which removes only
+corrupted Material transform-cache entries from `GRADLE_USER_HOME` so Gradle
+can re-download and regenerate them cleanly.
+
 ## Package
 
 - Root package: `sabbir.apk`

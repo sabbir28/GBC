@@ -1,4 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+import java.util.Locale
+
 buildscript {
     repositories {
         google()
@@ -14,4 +16,48 @@ buildscript {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+/**
+ * Repairs a known Gradle transform-cache corruption where Material's values.xml
+ * can contain an invalid "{str}" value and fail :app:mergeDebugResources.
+ *
+ * This task removes only the corrupted transform directories so Gradle can
+ * regenerate them from a clean dependency download.
+ */
+task repairMaterialTransformCache {
+    doLast {
+        def gradleHome = gradle.gradleUserHomeDir
+        def transformRoots = fileTree(gradleHome) {
+            include "caches/transforms-*/**/res/values/values.xml"
+        }
+
+        def corruptedDirs = [] as Set<File>
+        transformRoots.files.each { File valuesFile ->
+            def normalizedPath = valuesFile.absolutePath.replace('\\\\', '/').toLowerCase(Locale.ROOT)
+            if (!normalizedPath.contains("material-1.6.1") && !normalizedPath.contains("com.google.android.material")) {
+                return
+            }
+
+            def text = valuesFile.getText("UTF-8")
+            if (text.contains("{str}")) {
+                corruptedDirs << valuesFile.parentFile?.parentFile?.parentFile
+            }
+        }
+
+        if (corruptedDirs.isEmpty()) {
+            println "No corrupted Material transform cache entries were found."
+            return
+        }
+
+        corruptedDirs.each { File dir ->
+            if (dir?.exists()) {
+                println "Deleting corrupted transform cache: ${dir.absolutePath}"
+                delete dir
+            }
+        }
+
+        println "Removed ${corruptedDirs.size()} corrupted transform cache entr${corruptedDirs.size() == 1 ? 'y' : 'ies'}."
+        println "Run with --refresh-dependencies before rebuilding (example: ./gradlew repairMaterialTransformCache assembleDebug --refresh-dependencies)."
+    }
 }
