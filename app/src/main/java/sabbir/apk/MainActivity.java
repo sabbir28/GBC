@@ -17,6 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.inappmessaging.FirebaseInAppMessaging;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,6 +26,7 @@ import org.json.JSONObject;
 import sabbir.apk.InterNet.API.GitHub.RoutineManagerApi;
 import sabbir.apk.InterNet.API.Thread.GitHubExecutor;
 import sabbir.apk.InterNet.Deta.GitHubApi;
+import sabbir.apk.Analytics.FirebaseEventLogger;
 import sabbir.apk.UI.HomeActivity;
 import sabbir.apk.UI.NoInternetActivity;
 
@@ -41,6 +44,7 @@ public final class MainActivity extends AppCompatActivity {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseEventLogger eventLogger;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +53,9 @@ public final class MainActivity extends AppCompatActivity {
 
         // Initialize Firebase Analytics
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        eventLogger = new FirebaseEventLogger(mFirebaseAnalytics);
         logAppLaunchEvent();
+        bootstrapFirebaseServices();
 
         long splashStartTime = System.currentTimeMillis();
 
@@ -72,6 +78,23 @@ public final class MainActivity extends AppCompatActivity {
         }
 
         enforceMinimumSplashTime(splashStartTime);
+    }
+
+    private void bootstrapFirebaseServices() {
+        FirebaseInAppMessaging.getInstance().setMessagesSuppressed(false);
+
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                eventLogger.logStringEvent("fcm_token_bootstrap", "token", task.getResult());
+                Log.d(TAG, "FCM token bootstrap successful");
+                return;
+            }
+
+            Exception ex = task.getException();
+            String detail = ex != null ? ex.getMessage() : "unknown_error";
+            eventLogger.logGitHubSync("fcm_token_bootstrap", false, detail);
+            Log.w(TAG, "FCM token bootstrap failed", ex);
+        });
     }
 
     // Ensures splash screen displays at least MIN_SPLASH_DURATION_MS
@@ -97,13 +120,14 @@ public final class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(String result) {
                         Log.d(TAG, "Repo metadata fetched successfully");
+                        eventLogger.logGitHubSync("metadata_fetch", true, "repo_metadata_ok");
                         fetchRoutineFile();
                     }
 
                     @Override
                     public void onError(Exception e) {
                         Log.e(TAG, "Repo metadata fetch failed", e);
-                        logSyncEvent(false, "metadata_fetch_failed");
+                        logSyncEvent("metadata_fetch", false, "metadata_fetch_failed");
                     }
                 }
         );
@@ -124,7 +148,7 @@ public final class MainActivity extends AppCompatActivity {
                     @Override
                     public void onError(Exception e) {
                         Log.e(TAG, "Repo contents fetch failed", e);
-                        logSyncEvent(false, "contents_fetch_failed");
+                        logSyncEvent("contents_fetch", false, "contents_fetch_failed");
                     }
                 }
         );
@@ -142,40 +166,41 @@ public final class MainActivity extends AppCompatActivity {
                 if (ROUTINE_FILE.equals(file.optString("name"))) {
                     RoutineManagerApi.sync(getApplicationContext(), file);
                     Log.d(TAG, "Routine sync completed successfully");
-                    logSyncEvent(true, "routine_sync_completed");
+                    logSyncEvent("routine_sync", true, "routine_sync_completed");
+                    FirebaseInAppMessaging.getInstance().triggerEvent("routine_sync_success");
                     return;
                 }
             }
 
             Log.w(TAG, "Routine file not found");
-            logSyncEvent(false, "routine_file_missing");
+            logSyncEvent("routine_sync", false, "routine_file_missing");
+            FirebaseInAppMessaging.getInstance().triggerEvent("routine_sync_failed");
 
         } catch (Exception e) {
             Log.e(TAG, "Repo file parsing failed", e);
-            logSyncEvent(false, "parsing_failed");
+            logSyncEvent("routine_sync", false, "parsing_failed");
+            FirebaseInAppMessaging.getInstance().triggerEvent("routine_sync_failed");
         }
     }
 
     // Logs app launch event
     private void logAppLaunchEvent() {
-        Bundle bundle = new Bundle();
-        bundle.putString("launch_source", "splash_screen");
-        mFirebaseAnalytics.logEvent("app_launch", bundle);
+        eventLogger.logStringEvent("app_launch", "launch_source", "splash_screen");
+        FirebaseInAppMessaging.getInstance().triggerEvent("app_opened");
     }
 
     // Logs network status event
     private void logNetworkStatus(boolean connected) {
-        Bundle bundle = new Bundle();
-        bundle.putString("network_status", connected ? "connected" : "disconnected");
-        mFirebaseAnalytics.logEvent("network_status", bundle);
+        eventLogger.logStringEvent(
+                "network_status",
+                "network_status",
+                connected ? "connected" : "disconnected"
+        );
     }
 
     // Logs GitHub sync events
-    private void logSyncEvent(boolean success, String detail) {
-        Bundle bundle = new Bundle();
-        bundle.putBoolean("success", success);
-        bundle.putString("detail", detail);
-        mFirebaseAnalytics.logEvent("routine_sync", bundle);
+    private void logSyncEvent(@NonNull String step, boolean success, @NonNull String detail) {
+        eventLogger.logGitHubSync(step, success, detail);
     }
 
     // Reliable connectivity check

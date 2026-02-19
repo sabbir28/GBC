@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.inappmessaging.FirebaseInAppMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -24,17 +25,21 @@ import sabbir.apk.R;
 
 import java.util.Map;
 
+import sabbir.apk.Analytics.FirebaseEventLogger;
+
 public class FCM extends FirebaseMessagingService {
 
     private static final String TAG = "FCM";
     private static final String CHANNEL_ID = "default_channel";
 
     private FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseEventLogger eventLogger;
 
     @Override
     public void onCreate() {
         super.onCreate();
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        eventLogger = new FirebaseEventLogger(mFirebaseAnalytics);
     }
 
     @Override
@@ -55,6 +60,17 @@ public class FCM extends FirebaseMessagingService {
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
             handleData(remoteMessage.getData());
+
+            if (remoteMessage.getNotification() == null) {
+                String fallbackTitle = remoteMessage.getData().get("title");
+                String fallbackBody = remoteMessage.getData().get("body");
+                if (fallbackTitle != null || fallbackBody != null) {
+                    sendNotification(
+                            fallbackTitle != null ? fallbackTitle : "GBC Message",
+                            fallbackBody != null ? fallbackBody : "Open app for details"
+                    );
+                }
+            }
         }
 
         // Handle notification payload
@@ -66,6 +82,7 @@ public class FCM extends FirebaseMessagingService {
 
             logNotificationReceived(title, body);
             sendNotification(title, body);
+            FirebaseInAppMessaging.getInstance().triggerEvent("notification_received");
         }
     }
 
@@ -143,14 +160,12 @@ public class FCM extends FirebaseMessagingService {
     // ------------------- Firebase Analytics Logging -------------------
 
     private void logTokenGenerated(String token) {
-        if (mFirebaseAnalytics == null) return;
-        Bundle bundle = new Bundle();
-        bundle.putString("fcm_token", token);
-        mFirebaseAnalytics.logEvent("fcm_token_generated", bundle);
+        if (eventLogger == null) return;
+        eventLogger.logStringEvent("fcm_token_generated", "fcm_token", token);
     }
 
     private void logNotificationReceived(String title, String body) {
-        if (mFirebaseAnalytics == null) return;
+        if (eventLogger == null) return;
         Bundle bundle = new Bundle();
         bundle.putString("title", title != null ? title : "");
         bundle.putString("body", body != null ? body : "");
@@ -158,12 +173,8 @@ public class FCM extends FirebaseMessagingService {
     }
 
     private void logDataPayload(String action, Map<String, String> data) {
-        if (mFirebaseAnalytics == null) return;
-        Bundle bundle = new Bundle();
-        bundle.putString("action", action);
-        for (Map.Entry<String, String> entry : data.entrySet()) {
-            bundle.putString(entry.getKey(), entry.getValue());
-        }
-        mFirebaseAnalytics.logEvent("data_payload_received", bundle);
+        if (eventLogger == null) return;
+        eventLogger.logMapEvent("data_payload_received", data);
+        eventLogger.logStringEvent("data_payload_action", "action", action);
     }
 }
