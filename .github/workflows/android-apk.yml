@@ -47,7 +47,7 @@ jobs:
       # ----------------------------------------------------
       - name: Build Debug & Release APK
         run: |
-          ./gradlew clean assembleDebug assembleRelease
+          ./gradlew repairMaterialTransformCache clean assembleDebug assembleRelease --refresh-dependencies
 
       # ----------------------------------------------------
       # Collect artifacts
