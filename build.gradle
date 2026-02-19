@@ -61,14 +61,3 @@ task repairMaterialTransformCache {
         println "Run with --refresh-dependencies before rebuilding (example: ./gradlew repairMaterialTransformCache assembleDebug --refresh-dependencies)."
     }
 }
-
-gradle.projectsEvaluated {
-    subprojects { subproject ->
-        subproject.tasks.matching { t ->
-            t.name in ["mergeDebugResources", "mergeReleaseResources"]
-        }.configureEach {
-            dependsOn(rootProject.tasks.named("repairMaterialTransformCache"))
-        }
-    }
-}
-

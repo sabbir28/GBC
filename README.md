@@ -58,8 +58,6 @@ This project includes `repairMaterialTransformCache`, which removes only
 corrupted Material transform-cache entries from `GRADLE_USER_HOME` so Gradle
 can re-download and regenerate them cleanly.
 
-In CI, the workflow now runs this repair task before build with `--refresh-dependencies` to avoid stale cached transforms.
-
 ## Package
 
 - Root package: `sabbir.apk`
