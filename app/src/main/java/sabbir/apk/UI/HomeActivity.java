@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.json.JSONObject;
 
@@ -54,10 +55,16 @@ public final class HomeActivity extends AppCompatActivity {
     private NavigationView navigationView;
     private MaterialToolbar toolbar;
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        // Initialize Firebase Analytics
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        logScreenView("HomeActivity");
 
         initViews();
         setupToolbarAndDrawer();
@@ -77,7 +84,10 @@ public final class HomeActivity extends AppCompatActivity {
                 tvCurrentTime,
                 findViewById(R.id.tv_upcoming_header),
                 findViewById(R.id.tv_previous_header),
-                (items, date) -> ReminderScheduler.scheduleTodayReminders(this, items, date)
+                (items, date) -> {
+                    ReminderScheduler.scheduleTodayReminders(this, items, date);
+                    logRoutineViewed("today_schedule", items.size());
+                }
         );
 
         updateController = new HomeUpdateController(this, requestCode -> {
@@ -95,6 +105,7 @@ public final class HomeActivity extends AppCompatActivity {
         File routineFile = RoutineManagerApi.getRoutineFile(this);
         if (routineFile == null || !routineFile.exists() || !routineFile.canRead()) {
             scheduleController.showErrorState("Routine file not found or inaccessible");
+            logRoutineLoad(false, "file_missing_or_inaccessible");
             return;
         }
         loadRoutineAsync(routineFile);
@@ -126,6 +137,7 @@ public final class HomeActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(item -> {
             drawerLayout.closeDrawer(GravityCompat.START, true);
             handleNavigationItemClick(item.getItemId());
+            logNavigationClick(item.getTitle().toString());
             return true;
         });
     }
@@ -142,10 +154,14 @@ public final class HomeActivity extends AppCompatActivity {
             try {
                 String json = readFileToString(file);
                 JSONObject root = new JSONObject(json);
-                mainHandler.post(() -> renderSchedule(root));
+                mainHandler.post(() -> {
+                    renderSchedule(root);
+                    logRoutineLoad(true, "success");
+                });
             } catch (Exception e) {
                 Log.e(TAG, "Failed to load routine", e);
                 mainHandler.post(() -> scheduleController.showErrorState("Failed to load routine"));
+                logRoutineLoad(false, "parse_failed");
             }
         });
     }
@@ -156,6 +172,7 @@ public final class HomeActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Invalid routine JSON structure", e);
             scheduleController.showErrorState("Invalid schedule format");
+            logRoutineLoad(false, "invalid_json");
         }
     }
 
@@ -171,9 +188,7 @@ public final class HomeActivity extends AppCompatActivity {
     }
 
     private void handleNavigationItemClick(int itemId) {
-        if (itemId == R.id.menu_today) {
-            return;
-        }
+        if (itemId == R.id.menu_today) return;
 
         Class<?> destination = itemId == R.id.menu_schedule ? Schedule.class : Setting.class;
         startActivity(new Intent(this, destination)
@@ -207,12 +222,37 @@ public final class HomeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (updateController != null) {
-            updateController.onDestroy();
-        }
-        if (scheduleController != null) {
-            scheduleController.stopUiTicker();
-        }
+        if (updateController != null) updateController.onDestroy();
+        if (scheduleController != null) scheduleController.stopUiTicker();
         ioExecutor.shutdownNow();
+    }
+
+    // ------------------- Firebase Analytics Methods -------------------
+
+    private void logScreenView(@NonNull String screenName) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName);
+        bundle.putString(FirebaseAnalytics.Param.SCREEN_CLASS, getClass().getSimpleName());
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle);
+    }
+
+    private void logNavigationClick(@NonNull String itemTitle) {
+        Bundle bundle = new Bundle();
+        bundle.putString("navigation_item", itemTitle);
+        mFirebaseAnalytics.logEvent("navigation_click", bundle);
+    }
+
+    private void logRoutineLoad(boolean success, @NonNull String detail) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("success", success);
+        bundle.putString("detail", detail);
+        mFirebaseAnalytics.logEvent("routine_load", bundle);
+    }
+
+    private void logRoutineViewed(@NonNull String type, int itemCount) {
+        Bundle bundle = new Bundle();
+        bundle.putString("type", type);
+        bundle.putInt("item_count", itemCount);
+        mFirebaseAnalytics.logEvent("routine_viewed", bundle);
     }
 }

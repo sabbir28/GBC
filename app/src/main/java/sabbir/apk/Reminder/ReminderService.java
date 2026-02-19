@@ -7,12 +7,15 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,6 +29,14 @@ public class ReminderService extends Service {
     private static final String CHANNEL_NAME = "Class Reminders";
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
+
+    private FirebaseAnalytics mFirebaseAnalytics;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -46,6 +57,9 @@ public class ReminderService extends Service {
         if (manager != null) {
             manager.notify((int) System.currentTimeMillis(), notification);
         }
+
+        // Log the reminder event in Firebase Analytics
+        logReminderEvent(action, subject, instructor, startTime);
 
         stopSelf(startId);
         return START_NOT_STICKY;
@@ -98,14 +112,10 @@ public class ReminderService extends Service {
     }
 
     private void createChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return;
-        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
 
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (manager == null) {
-            return;
-        }
+        if (manager == null) return;
 
         NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
@@ -117,5 +127,16 @@ public class ReminderService extends Service {
         channel.setLightColor(Color.parseColor("#F59E0B"));
         channel.enableVibration(true);
         manager.createNotificationChannel(channel);
+    }
+
+    private void logReminderEvent(String action, String subject, String instructor, String startTime) {
+        if (mFirebaseAnalytics == null) return;
+
+        Bundle bundle = new Bundle();
+        bundle.putString("action", action);
+        bundle.putString("subject", subject != null ? subject : "");
+        bundle.putString("instructor", instructor != null ? instructor : "");
+        bundle.putString("start_time", startTime != null ? startTime : "");
+        mFirebaseAnalytics.logEvent("class_reminder_triggered", bundle);
     }
 }

@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import sabbir.apk.R;
 import sabbir.apk.Reminder.ReminderPreferences;
@@ -24,10 +25,15 @@ public class Setting extends AppCompatActivity {
     private SwitchMaterial switchClassReminders;
     private SwitchMaterial switchMorningAlarm;
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
+
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        logScreenView();
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar_settings);
         setSupportActionBar(toolbar);
@@ -53,16 +59,23 @@ public class Setting extends AppCompatActivity {
         switchNotifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
             prefs.edit().putBoolean(KEY_NOTIFICATIONS, isChecked).apply();
             updateReminderAvailability(isChecked, prefs);
+            logPreferenceChange("notifications", isChecked);
         });
 
-        switchSms.setOnCheckedChangeListener((buttonView, isChecked) ->
-                prefs.edit().putBoolean(KEY_SMS, isChecked).apply());
+        switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean(KEY_SMS, isChecked).apply();
+            logPreferenceChange("sms", isChecked);
+        });
 
-        switchClassReminders.setOnCheckedChangeListener((buttonView, isChecked) ->
-                prefs.edit().putBoolean(KEY_CLASS_REMINDERS, isChecked).apply());
+        switchClassReminders.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean(KEY_CLASS_REMINDERS, isChecked).apply();
+            logPreferenceChange("class_reminders", isChecked);
+        });
 
-        switchMorningAlarm.setOnCheckedChangeListener((buttonView, isChecked) ->
-                prefs.edit().putBoolean(KEY_MORNING_ALARM, isChecked).apply());
+        switchMorningAlarm.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean(KEY_MORNING_ALARM, isChecked).apply();
+            logPreferenceChange("morning_alarm", isChecked);
+        });
     }
 
     private void updateReminderAvailability(boolean notificationsEnabled, SharedPreferences prefs) {
@@ -77,5 +90,21 @@ public class Setting extends AppCompatActivity {
         switchSms.setEnabled(notificationsEnabled);
         switchClassReminders.setEnabled(notificationsEnabled);
         switchMorningAlarm.setEnabled(notificationsEnabled);
+    }
+
+    // ------------------- Firebase Analytics Methods -------------------
+
+    private void logScreenView() {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, "SettingActivity");
+        bundle.putString(FirebaseAnalytics.Param.SCREEN_CLASS, getClass().getSimpleName());
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle);
+    }
+
+    private void logPreferenceChange(String key, boolean value) {
+        Bundle bundle = new Bundle();
+        bundle.putString("preference_key", key);
+        bundle.putBoolean("preference_value", value);
+        mFirebaseAnalytics.logEvent("preference_changed", bundle);
     }
 }

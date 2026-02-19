@@ -16,6 +16,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import sabbir.apk.MainActivity;
 import sabbir.apk.R;
 
@@ -25,15 +27,20 @@ public final class NoInternetActivity extends AppCompatActivity {
 
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_no_internet);
 
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        logScreenView();
+
         Button retryButton = findViewById(R.id.btn_retry);
 
         retryButton.setOnClickListener(v -> {
+            logRetryClick();
             if (isInternetAvailable(this)) {
                 navigateToSplash();
             } else {
@@ -54,11 +61,9 @@ public final class NoInternetActivity extends AppCompatActivity {
         unregisterNetworkObserver();
     }
 
-    /**
-     * Redirects user back to Splash / Main entry.
-     */
     private void navigateToSplash() {
         Log.d(TAG, "Internet restored → redirecting");
+        logInternetRestored();
 
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -66,38 +71,28 @@ public final class NoInternetActivity extends AppCompatActivity {
         finish();
     }
 
-    /**
-     * Registers connectivity observer (API 21+ safe).
-     */
     private void registerNetworkObserver() {
         connectivityManager =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        if (connectivityManager == null) {
-            return;
-        }
+        if (connectivityManager == null) return;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            networkCallback = new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(@NonNull Network network) {
-                    runOnUiThread(() -> navigateToSplash());
-                }
-            };
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(@NonNull Network network) {
+                runOnUiThread(NoInternetActivity.this::navigateToSplash);
+            }
+        };
 
-            connectivityManager.registerDefaultNetworkCallback(networkCallback);
-
-        } else {
-            NetworkRequest request = new NetworkRequest.Builder().build();
-
-            networkCallback = new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(@NonNull Network network) {
-                    runOnUiThread(() -> navigateToSplash());
-                }
-            };
-
-            connectivityManager.registerNetworkCallback(request, networkCallback);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                connectivityManager.registerDefaultNetworkCallback(networkCallback);
+            } else {
+                NetworkRequest request = new NetworkRequest.Builder().build();
+                connectivityManager.registerNetworkCallback(request, networkCallback);
+            }
+        } catch (Exception ignored) {
+            // Defensive: avoid crashes if registration fails
         }
     }
 
@@ -106,14 +101,29 @@ public final class NoInternetActivity extends AppCompatActivity {
             try {
                 connectivityManager.unregisterNetworkCallback(networkCallback);
             } catch (Exception ignored) {
-                // Defensive: avoids IllegalArgumentException on double unregister
             }
         }
     }
 
-    /**
-     * Connectivity check (shared logic).
-     */
+    private void logScreenView() {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, "NoInternetActivity");
+        bundle.putString(FirebaseAnalytics.Param.SCREEN_CLASS, getClass().getSimpleName());
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle);
+    }
+
+    private void logRetryClick() {
+        Bundle bundle = new Bundle();
+        bundle.putString("action", "retry_button_click");
+        mFirebaseAnalytics.logEvent("no_internet_action", bundle);
+    }
+
+    private void logInternetRestored() {
+        Bundle bundle = new Bundle();
+        bundle.putString("action", "internet_restored");
+        mFirebaseAnalytics.logEvent("no_internet_action", bundle);
+    }
+
     private static boolean isInternetAvailable(@NonNull Context context) {
         ConnectivityManager cm =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);

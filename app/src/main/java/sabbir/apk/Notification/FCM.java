@@ -8,13 +8,16 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+
 import sabbir.apk.MainActivity;
 import sabbir.apk.R;
 
@@ -25,19 +28,26 @@ public class FCM extends FirebaseMessagingService {
     private static final String TAG = "FCM";
     private static final String CHANNEL_ID = "default_channel";
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+    }
+
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
         Log.d(TAG, "Refreshed token: " + token);
 
-        // Send token to your backend server
+        logTokenGenerated(token);
         sendRegistrationToServer(token);
     }
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-
         Log.d(TAG, "From: " + remoteMessage.getFrom());
 
         // Handle data payload
@@ -53,20 +63,19 @@ public class FCM extends FirebaseMessagingService {
             Log.d(TAG, "Notification Title: " + title);
             Log.d(TAG, "Notification Body: " + body);
 
+            logNotificationReceived(title, body);
             sendNotification(title, body);
         }
     }
 
     private void handleData(Map<String, String> data) {
-        // Example: If data contains "action", handle it accordingly
         if (data.containsKey("action")) {
             String action = data.get("action");
             Log.d(TAG, "Action received: " + action);
-            // TODO: Implement your custom logic based on action
+            logDataPayload(action, data);
         }
 
-        // Decide whether to run long job or short task
-        if (data.containsKey("long_job") && data.get("long_job").equals("true")) {
+        if ("true".equals(data.get("long_job"))) {
             scheduleJob(data);
         } else {
             handleNow(data);
@@ -74,26 +83,24 @@ public class FCM extends FirebaseMessagingService {
     }
 
     private void sendRegistrationToServer(String token) {
-        // TODO: Replace with actual API call to your backend server
         Log.d(TAG, "Send token to server: " + token);
+        // TODO: Replace with actual backend API call
     }
 
     private void scheduleJob(Map<String, String> data) {
-        // Example using WorkManager for long-running tasks
         Log.d(TAG, "Scheduling long-running job with data: " + data.toString());
-        // TODO: Implement WorkManager job if needed
+        // TODO: Implement WorkManager job
     }
 
     private void handleNow(Map<String, String> data) {
         Log.d(TAG, "Handling short task now: " + data.toString());
-        // Example: quick processing of data
     }
 
     private void sendNotification(String title, String body) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent;
 
+        PendingIntent pendingIntent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             pendingIntent = PendingIntent.getActivity(this, 0, intent,
                     PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
@@ -106,7 +113,7 @@ public class FCM extends FirebaseMessagingService {
 
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.bm_college_logo) // your notification icon
+                        .setSmallIcon(R.drawable.bm_college_logo)
                         .setContentTitle(title)
                         .setContentText(body)
                         .setAutoCancel(true)
@@ -117,8 +124,7 @@ public class FCM extends FirebaseMessagingService {
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // Android O+ requires notification channels
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     "Default Channel",
@@ -128,6 +134,35 @@ public class FCM extends FirebaseMessagingService {
             notificationManager.createNotificationChannel(channel);
         }
 
-        notificationManager.notify((int) System.currentTimeMillis(), notificationBuilder.build());
+        if (notificationManager != null) {
+            notificationManager.notify((int) System.currentTimeMillis(), notificationBuilder.build());
+        }
+    }
+
+    // ------------------- Firebase Analytics Logging -------------------
+
+    private void logTokenGenerated(String token) {
+        if (mFirebaseAnalytics == null) return;
+        Bundle bundle = new Bundle();
+        bundle.putString("fcm_token", token);
+        mFirebaseAnalytics.logEvent("fcm_token_generated", bundle);
+    }
+
+    private void logNotificationReceived(String title, String body) {
+        if (mFirebaseAnalytics == null) return;
+        Bundle bundle = new Bundle();
+        bundle.putString("title", title != null ? title : "");
+        bundle.putString("body", body != null ? body : "");
+        mFirebaseAnalytics.logEvent("notification_received", bundle);
+    }
+
+    private void logDataPayload(String action, Map<String, String> data) {
+        if (mFirebaseAnalytics == null) return;
+        Bundle bundle = new Bundle();
+        bundle.putString("action", action);
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            bundle.putString(entry.getKey(), entry.getValue());
+        }
+        mFirebaseAnalytics.logEvent("data_payload_received", bundle);
     }
 }

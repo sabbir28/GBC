@@ -16,6 +16,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -27,12 +29,10 @@ import sabbir.apk.UI.NoInternetActivity;
 
 public final class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "SplashActivity";
+    private static final String TAG = "MainActivity";
 
-    // Splash timing policy
     private static final long MIN_SPLASH_DURATION_MS = 1500L;
 
-    // GitHub config
     private static final String GITHUB_OWNER = "sabbir28";
     private static final String GITHUB_REPO = "sabbir28.github.io";
     private static final String ROUTINE_PATH = "/BMC";
@@ -40,22 +40,30 @@ public final class MainActivity extends AppCompatActivity {
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // splash layout with logo
+        setContentView(R.layout.activity_main); // Splash layout
+
+        // Initialize Firebase Analytics
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        logAppLaunchEvent();
 
         long splashStartTime = System.currentTimeMillis();
 
         if (isInternetAvailable(this)) {
+            logNetworkStatus(true);
             triggerBackgroundSync();
         } else {
-            // Cheacking if file was alrady existing or not
-            boolean file_exist = RoutineManagerApi.routineFileExists(getApplicationContext());
-            if(!file_exist)
-            {
+            logNetworkStatus(false);
+
+            boolean fileExists = RoutineManagerApi.routineFileExists(getApplicationContext());
+            if (!fileExists) {
                 startActivity(new Intent(this, NoInternetActivity.class));
             }
+
             Toast.makeText(
                     this,
                     "No internet connection. Running in offline mode.",
@@ -66,10 +74,7 @@ public final class MainActivity extends AppCompatActivity {
         enforceMinimumSplashTime(splashStartTime);
     }
 
-    /**
-     * Ensures branding is visible for a minimum duration.
-     * Does NOT wait for network completion.
-     */
+    // Ensures splash screen displays at least MIN_SPLASH_DURATION_MS
     private void enforceMinimumSplashTime(long startTime) {
         long elapsed = System.currentTimeMillis() - startTime;
         long remaining = Math.max(0, MIN_SPLASH_DURATION_MS - elapsed);
@@ -82,10 +87,7 @@ public final class MainActivity extends AppCompatActivity {
         finish();
     }
 
-    /**
-     * Background sync entry point.
-     * Fire-and-forget by design.
-     */
+    // Background GitHub sync
     private void triggerBackgroundSync() {
         GitHubApi.fetchRepoInfo(
                 GITHUB_OWNER,
@@ -94,22 +96,18 @@ public final class MainActivity extends AppCompatActivity {
                 new GitHubExecutor.Callback() {
                     @Override
                     public void onSuccess(String result) {
-                        Log.d(TAG, "Repo metadata fetched");
+                        Log.d(TAG, "Repo metadata fetched successfully");
                         fetchRoutineFile();
                     }
 
                     @Override
                     public void onError(Exception e) {
                         Log.e(TAG, "Repo metadata fetch failed", e);
+                        logSyncEvent(false, "metadata_fetch_failed");
                     }
                 }
         );
     }
-
-
-
-
-
 
     private void fetchRoutineFile() {
         GitHubApi.fetchRepoContents(
@@ -126,6 +124,7 @@ public final class MainActivity extends AppCompatActivity {
                     @Override
                     public void onError(Exception e) {
                         Log.e(TAG, "Repo contents fetch failed", e);
+                        logSyncEvent(false, "contents_fetch_failed");
                     }
                 }
         );
@@ -138,27 +137,48 @@ public final class MainActivity extends AppCompatActivity {
             for (int i = 0; i < files.length(); i++) {
                 JSONObject file = files.getJSONObject(i);
 
-                if (!"file".equals(file.optString("type"))) {
-                    continue;
-                }
+                if (!"file".equals(file.optString("type"))) continue;
 
                 if (ROUTINE_FILE.equals(file.optString("name"))) {
                     RoutineManagerApi.sync(getApplicationContext(), file);
-                    Log.d(TAG, "Routine sync completed");
+                    Log.d(TAG, "Routine sync completed successfully");
+                    logSyncEvent(true, "routine_sync_completed");
                     return;
                 }
             }
 
             Log.w(TAG, "Routine file not found");
+            logSyncEvent(false, "routine_file_missing");
 
         } catch (Exception e) {
             Log.e(TAG, "Repo file parsing failed", e);
+            logSyncEvent(false, "parsing_failed");
         }
     }
 
-    /**
-     * Reliable connectivity check (API 21+).
-     */
+    // Logs app launch event
+    private void logAppLaunchEvent() {
+        Bundle bundle = new Bundle();
+        bundle.putString("launch_source", "splash_screen");
+        mFirebaseAnalytics.logEvent("app_launch", bundle);
+    }
+
+    // Logs network status event
+    private void logNetworkStatus(boolean connected) {
+        Bundle bundle = new Bundle();
+        bundle.putString("network_status", connected ? "connected" : "disconnected");
+        mFirebaseAnalytics.logEvent("network_status", bundle);
+    }
+
+    // Logs GitHub sync events
+    private void logSyncEvent(boolean success, String detail) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("success", success);
+        bundle.putString("detail", detail);
+        mFirebaseAnalytics.logEvent("routine_sync", bundle);
+    }
+
+    // Reliable connectivity check
     public static boolean isInternetAvailable(@NonNull Context context) {
         ConnectivityManager cm =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
