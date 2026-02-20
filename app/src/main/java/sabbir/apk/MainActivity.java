@@ -16,187 +16,217 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.atwebpages.sabbir28.Auth;
+import com.atwebpages.sabbir28.Core.TokenManager;
+import com.atwebpages.sabbir28.Core.UserManager;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import sabbir.apk.InterNet.API.GitHub.RoutineManagerApi;
 import sabbir.apk.InterNet.API.Thread.GitHubExecutor;
 import sabbir.apk.InterNet.Deta.GitHubApi;
+import sabbir.apk.UI.Auth.LoginActivity;
 import sabbir.apk.UI.HomeActivity;
 import sabbir.apk.UI.NoInternetActivity;
 
 public final class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-
-    private static final long MIN_SPLASH_DURATION_MS = 1500L;
+    private static final long MIN_SPLASH_MS = 1500L;
 
     private static final String GITHUB_OWNER = "sabbir28";
     private static final String GITHUB_REPO = "sabbir28.github.io";
     private static final String ROUTINE_PATH = "/BMC";
     private static final String ROUTINE_FILE = "rootine.json";
 
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private FirebaseAnalytics analytics;
+    private static TokenManager tokenManager;
+    private static UserManager userManager;
 
-    private FirebaseAnalytics mFirebaseAnalytics;
+    private boolean navigationHandled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // Splash layout
+        setContentView(R.layout.activity_main);
 
-        // Initialize Firebase Analytics
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        logAppLaunchEvent();
+        analytics = FirebaseAnalytics.getInstance(this);
+        tokenManager = new TokenManager(this);
+        userManager = new UserManager(this);
+        logAppLaunch();
 
-        long splashStartTime = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
         if (isInternetAvailable(this)) {
-            logNetworkStatus(true);
-            triggerBackgroundSync();
+            handleOnlineFlow();
         } else {
-            logNetworkStatus(false);
-
-            boolean fileExists = RoutineManagerApi.routineFileExists(getApplicationContext());
-            if (!fileExists) {
-                startActivity(new Intent(this, NoInternetActivity.class));
-            }
-
-            Toast.makeText(
-                    this,
-                    "No internet connection. Running in offline mode.",
-                    Toast.LENGTH_SHORT
-            ).show();
+            handleOfflineFlow();
         }
 
-        enforceMinimumSplashTime(splashStartTime);
+        ensureMinimumSplash(start);
     }
 
-    // Ensures splash screen displays at least MIN_SPLASH_DURATION_MS
-    private void enforceMinimumSplashTime(long startTime) {
-        long elapsed = System.currentTimeMillis() - startTime;
-        long remaining = Math.max(0, MIN_SPLASH_DURATION_MS - elapsed);
+    private void handleOnlineFlow() {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            goLogin();
+            return;
+        }
 
-        mainHandler.postDelayed(this::navigateToHome, remaining);
+        Auth.verifyTokenAsync(token, (status, body) -> {
+            if (status == 200) {
+                Log.i(TAG, "Token valid");
+                try {
+                    assert body != null;
+                    JSONObject json = new JSONObject(body);
+                    userManager.saveUser(
+                            json.optString("name"),
+                            json.optString("email"),
+                            json.optString("year"),
+                            json.optString("section"),
+                            json.optString("phone"),
+                            json.optString("class_roll"),
+                            json.optString("reg_no"),
+                            json.optString("image_key"),
+                            json.optString("image_base64")
+                    );
+                } catch (JSONException e) {
+                    Log.e(TAG, "Failed to save user details ! ");
+                }
+                triggerGitHubSync();
+                navigateHomeDelayed();
+            } else {
+                Log.e(TAG, "Token invalid");
+                goLogin();
+            }
+        });
+
+        logNetworkStatus(true);
     }
 
-    private void navigateToHome() {
-        startActivity(new Intent(this, HomeActivity.class));
+    private void handleOfflineFlow() {
+        logNetworkStatus(false);
+        boolean exists = RoutineManagerApi.routineFileExists(getApplicationContext());
+        if (!exists) {
+            goNoInternet();
+            return;
+        }
+        Toast.makeText(this, "No internet. Offline mode.", Toast.LENGTH_SHORT).show();
+        navigateHomeDelayed();
+    }
+
+    private void goLogin() {
+        if (navigationHandled) return;
+        navigationHandled = true;
+        startActivity(new Intent(this, LoginActivity.class));
         finish();
     }
 
-    // Background GitHub sync
-    private void triggerBackgroundSync() {
-        GitHubApi.fetchRepoInfo(
-                GITHUB_OWNER,
-                GITHUB_REPO,
-                null,
-                new GitHubExecutor.Callback() {
-                    @Override
-                    public void onSuccess(String result) {
-                        Log.d(TAG, "Repo metadata fetched successfully");
-                        fetchRoutineFile();
-                    }
+    private void goNoInternet() {
+        if (navigationHandled) return;
+        navigationHandled = true;
+        startActivity(new Intent(this, NoInternetActivity.class));
+        finish();
+    }
 
-                    @Override
-                    public void onError(Exception e) {
-                        Log.e(TAG, "Repo metadata fetch failed", e);
-                        logSyncEvent(false, "metadata_fetch_failed");
-                    }
-                }
-        );
+    private void navigateHomeDelayed() {
+        if (navigationHandled) return;
+        navigationHandled = true;
+        handler.postDelayed(() -> {
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+        }, MIN_SPLASH_MS);
+    }
+
+    private void ensureMinimumSplash(long startTime) {
+        long elapsed = System.currentTimeMillis() - startTime;
+        long remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
+        handler.postDelayed(() -> {
+            if (!navigationHandled) navigateHomeDelayed();
+        }, remaining);
+    }
+
+    private void triggerGitHubSync() {
+        GitHubApi.fetchRepoInfo(GITHUB_OWNER, GITHUB_REPO, null, new GitHubExecutor.Callback() {
+            @Override
+            public void onSuccess(String result) {
+                fetchRoutineFile();
+            }
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "GitHub metadata failed", e);
+                logSync(false, "metadata_fail");
+            }
+        });
     }
 
     private void fetchRoutineFile() {
-        GitHubApi.fetchRepoContents(
-                GITHUB_OWNER,
-                GITHUB_REPO,
-                ROUTINE_PATH,
-                null,
-                new GitHubExecutor.Callback() {
-                    @Override
-                    public void onSuccess(String result) {
-                        processRepoFiles(result);
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        Log.e(TAG, "Repo contents fetch failed", e);
-                        logSyncEvent(false, "contents_fetch_failed");
-                    }
-                }
-        );
+        GitHubApi.fetchRepoContents(GITHUB_OWNER, GITHUB_REPO, ROUTINE_PATH, null, new GitHubExecutor.Callback() {
+            @Override
+            public void onSuccess(String result) {
+                processFiles(result);
+            }
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "GitHub contents failed", e);
+                logSync(false, "contents_fail");
+            }
+        });
     }
 
-    private void processRepoFiles(@NonNull String json) {
+    private void processFiles(@NonNull String json) {
         try {
             JSONArray files = new JSONArray(json);
-
             for (int i = 0; i < files.length(); i++) {
                 JSONObject file = files.getJSONObject(i);
-
                 if (!"file".equals(file.optString("type"))) continue;
-
                 if (ROUTINE_FILE.equals(file.optString("name"))) {
                     RoutineManagerApi.sync(getApplicationContext(), file);
-                    Log.d(TAG, "Routine sync completed successfully");
-                    logSyncEvent(true, "routine_sync_completed");
+                    logSync(true, "routine_sync");
                     return;
                 }
             }
-
-            Log.w(TAG, "Routine file not found");
-            logSyncEvent(false, "routine_file_missing");
-
+            logSync(false, "routine_missing");
         } catch (Exception e) {
-            Log.e(TAG, "Repo file parsing failed", e);
-            logSyncEvent(false, "parsing_failed");
+            Log.e(TAG, "Parsing failed", e);
+            logSync(false, "parse_fail");
         }
     }
 
-    // Logs app launch event
-    private void logAppLaunchEvent() {
-        Bundle bundle = new Bundle();
-        bundle.putString("launch_source", "splash_screen");
-        mFirebaseAnalytics.logEvent("app_launch", bundle);
+    private void logAppLaunch() {
+        Bundle b = new Bundle();
+        b.putString("source", "splash");
+        analytics.logEvent("app_launch", b);
     }
 
-    // Logs network status event
     private void logNetworkStatus(boolean connected) {
-        Bundle bundle = new Bundle();
-        bundle.putString("network_status", connected ? "connected" : "disconnected");
-        mFirebaseAnalytics.logEvent("network_status", bundle);
+        Bundle b = new Bundle();
+        b.putString("status", connected ? "connected" : "disconnected");
+        analytics.logEvent("network_status", b);
     }
 
-    // Logs GitHub sync events
-    private void logSyncEvent(boolean success, String detail) {
-        Bundle bundle = new Bundle();
-        bundle.putBoolean("success", success);
-        bundle.putString("detail", detail);
-        mFirebaseAnalytics.logEvent("routine_sync", bundle);
+    private void logSync(boolean success, String detail) {
+        Bundle b = new Bundle();
+        b.putBoolean("success", success);
+        b.putString("detail", detail);
+        analytics.logEvent("routine_sync", b);
     }
 
-    // Reliable connectivity check
-    public static boolean isInternetAvailable(@NonNull Context context) {
-        ConnectivityManager cm =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
+    public static boolean isInternetAvailable(@NonNull Context ctx) {
+        ConnectivityManager cm = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Network network = cm.getActiveNetwork();
-            if (network == null) return false;
-
-            NetworkCapabilities caps = cm.getNetworkCapabilities(network);
-            return caps != null && (
-                    caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-                            || caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-                            || caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-            );
+            Network net = cm.getActiveNetwork();
+            if (net == null) return false;
+            NetworkCapabilities caps = cm.getNetworkCapabilities(net);
+            return caps != null && (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    || caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    || caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
         }
-
         NetworkInfo info = cm.getActiveNetworkInfo();
         return info != null && info.isConnected();
     }

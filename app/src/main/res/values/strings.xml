@@ -19,4 +19,15 @@
     <string name="reminder_instructor_label">Instructor: %1$s</string>
     <string name="reminder_time_label">Time: %1$s</string>
     <string name="reminder_channel_description">Notifications for class reminders and morning alarms.</string>
+
+    <string name="create_account">Create Account</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="class_roll">Class Roll</string>
+    <string name="registration_number">Registration No.</string>
+    <string name="year">Year</string>
+    <string name="section">Section</string>
+    <string name="profile_picture">Profile Picture</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="sign_in">Sign In</string>
 </resources>
