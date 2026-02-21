@@ -22,7 +22,9 @@
         android:usesCleartextTraffic="true"
         tools:ignore="ExtraText"
         tools:targetApi="31">
-
+        <activity
+            android:name=".UI.Setting.ProfileActivity"
+            android:exported="false" />
         <activity
             android:name=".UI.Auth.RegisterActivity"
             android:exported="false" />

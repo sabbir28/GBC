@@ -37,149 +37,48 @@
                 android:layout_marginBottom="12dp">
 
                 <LinearLayout
+                    android:id="@+id/ProfileSetting"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:visibility="visible"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        style="@style/TextAppearance.App.SectionHeader"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Profile settings" />
-
-                    <TextView
-                        style="@style/TextAppearance.App.Body"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="Update your account details used in sidebar and app profile." />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:hint="Full Name">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edit_name"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPersonName" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:hint="Email">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edit_email"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textEmailAddress" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:hint="Phone">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/edit_phone"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="phone" />
-                    </com.google.android.material.textfield.TextInputLayout>
 
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal">
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="0dp"
+                        <TextView
+                            style="@style/TextAppearance.App.SectionHeader"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Class Roll">
+                            android:text="Profile settings" />
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/edit_roll"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <Space
-                            android:layout_width="10dp"
-                            android:layout_height="1dp" />
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="0dp"
+                        <TextView
+                            style="@style/TextAppearance.App.Body"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Reg No">
+                            android:layout_marginTop="4dp"
+                            android:text="Update your account details used in sidebar and app profile." />
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/edit_reg_no"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal">
+                    <!-- Icon -->
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        android:contentDescription="Settings icon"
+                        android:rotation="270"
+                        app:tint="@color/colorOnSurface" />
 
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Year">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/edit_year"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <Space
-                            android:layout_width="10dp"
-                            android:layout_height="1dp" />
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Section">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/edit_section"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content" />
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_save_profile"
-                        style="@style/Widget.MaterialComponents.Button"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:text="Save profile"
-                        android:textAllCaps="false" />
                 </LinearLayout>
+
+
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
@@ -220,7 +119,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_schedule_24"
-                                android:tint="@color/colorPrimary" />
+                                app:tint="@color/colorPrimary" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
@@ -273,7 +172,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_today_24"
-                                android:tint="@color/colorWarning" />
+                                app:tint="@color/colorWarning" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
@@ -326,7 +225,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_schedule_24"
-                                android:tint="@color/colorPrimaryVariant" />
+                                app:tint="@color/colorPrimaryVariant" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
@@ -379,7 +278,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_today_24"
-                                android:tint="@color/colorWarning" />
+                                app:tint="@color/colorWarning" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
