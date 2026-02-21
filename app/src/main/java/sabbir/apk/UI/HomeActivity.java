@@ -37,6 +37,7 @@ import sabbir.apk.R;
 import sabbir.apk.Reminder.ReminderScheduler;
 import sabbir.apk.UI.home.HomeScheduleController;
 import sabbir.apk.UI.home.HomeUpdateController;
+import sabbir.apk.Widget.RoutineWidgetProvider;
 
 public final class HomeActivity extends AppCompatActivity {
 
@@ -175,6 +176,7 @@ public final class HomeActivity extends AppCompatActivity {
     private void renderSchedule(JSONObject root) {
         try {
             scheduleController.renderTodaySchedule(root);
+            RoutineWidgetProvider.updateAllWidgets(this);
         } catch (Exception e) {
             Log.e(TAG, "Invalid routine JSON structure", e);
             scheduleController.showErrorState("Invalid schedule format");
@@ -253,6 +255,7 @@ public final class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         bindUserToDrawerHeader();
+        RoutineWidgetProvider.updateAllWidgets(this);
     }
 
     @Override
