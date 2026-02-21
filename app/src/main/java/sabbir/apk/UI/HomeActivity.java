@@ -5,6 +5,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -17,11 +18,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.navigation.NavigationView;
+import com.atwebpages.sabbir28.Core.UserManager;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import android.graphics.BitmapFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -54,6 +57,7 @@ public final class HomeActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private MaterialToolbar toolbar;
+    private UserManager userManager;
 
     private FirebaseAnalytics mFirebaseAnalytics;
 
@@ -65,9 +69,11 @@ public final class HomeActivity extends AppCompatActivity {
         // Initialize Firebase Analytics
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logScreenView("HomeActivity");
+        userManager = new UserManager(this);
 
         initViews();
         setupToolbarAndDrawer();
+        bindUserToDrawerHeader();
         setupRecyclerViews();
         setupControllers();
         loadRoutine();
@@ -187,6 +193,46 @@ public final class HomeActivity extends AppCompatActivity {
         return sb.toString();
     }
 
+    private void bindUserToDrawerHeader() {
+        if (navigationView == null) return;
+
+        android.view.View header = navigationView.getHeaderView(0);
+        if (header == null) return;
+
+        android.widget.TextView tvName = header.findViewById(R.id.tv_header_name);
+        android.widget.TextView tvEmail = header.findViewById(R.id.tv_header_email);
+        android.widget.TextView tvDetails = header.findViewById(R.id.tv_header_details);
+        android.widget.ImageView ivAvatar = header.findViewById(R.id.iv_header_avatar);
+
+        String name = safeValue(userManager.getUserName(), "Student");
+        String email = safeValue(userManager.getUserEmail(), "No email");
+        String year = safeValue(userManager.getUserYear(), "-");
+        String section = safeValue(userManager.getUserSection(), "-");
+        String roll = safeValue(userManager.getUserClassRoll(), "-");
+
+        tvName.setText(name);
+        tvEmail.setText(email);
+        tvDetails.setText("Year " + year + " • Section " + section + " • Roll " + roll);
+
+        String imageBase64 = userManager.getUserImageBase64();
+        if (imageBase64 != null && !imageBase64.trim().isEmpty()) {
+            try {
+                byte[] bytes = Base64.decode(imageBase64, Base64.DEFAULT);
+                android.graphics.Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                if (bitmap != null) {
+                    ivAvatar.setImageBitmap(bitmap);
+                    ivAvatar.setPadding(0, 0, 0, 0);
+                }
+            } catch (Exception ignored) {
+                ivAvatar.setImageResource(R.drawable.ic_person_placeholder);
+            }
+        }
+    }
+
+    private String safeValue(String value, String fallback) {
+        return (value == null || value.trim().isEmpty()) ? fallback : value.trim();
+    }
+
     private void handleNavigationItemClick(int itemId) {
         if (itemId == R.id.menu_today) return;
 
@@ -201,6 +247,12 @@ public final class HomeActivity extends AppCompatActivity {
         if (requestCode == HomeUpdateController.REQUEST_INSTALL_PACKAGES_CODE) {
             updateController.onInstallPermissionResult();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bindUserToDrawerHeader();
     }
 
     @Override
