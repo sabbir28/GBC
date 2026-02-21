@@ -1,52 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:paddingHorizontal="24dp"
-    android:paddingVertical="32dp"
-    android:fillViewport="true">
+    android:paddingVertical="32dp">
 
     <LinearLayout
         android:id="@+id/registerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
-        <!-- Top flexible space -->
         <Space
             android:layout_width="match_parent"
             android:layout_height="32dp" />
 
-        <!-- Header -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:layout_marginBottom="40dp"
             android:gravity="center_horizontal"
-            android:layout_marginBottom="40dp">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="@string/create_account"
-                android:textSize="28sp"
-                android:textStyle="bold"
                 android:textColor="?attr/colorPrimary"
-                android:layout_marginTop="16dp" />
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Please fill in your details"
-                android:textSize="16sp"
+                android:layout_marginTop="4dp"
+                android:text="@string/register_subtitle"
                 android:textColor="@color/colorPrimaryVariant"
-                android:layout_marginTop="4dp" />
+                android:textSize="16sp" />
         </LinearLayout>
 
-        <!-- Profile Picture -->
         <FrameLayout
             android:id="@+id/profileImageContainer"
             android:layout_width="120dp"
@@ -61,193 +57,190 @@
                 android:id="@+id/profileImageView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:contentDescription="@string/profile_picture"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_person_placeholder"
-                android:contentDescription="@string/profile_picture" />
+                android:src="@drawable/ic_person_placeholder" />
 
             <ImageView
                 android:id="@+id/cameraIcon"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_gravity="bottom|end"
-                android:src="@drawable/ic_camera_alt"
-                android:padding="8dp"
                 android:background="@drawable/bg_dialog_round"
                 android:backgroundTint="@color/colorPrimaryVariant"
-                android:elevation="4dp" />
+                android:elevation="4dp"
+                android:padding="8dp"
+                android:src="@drawable/ic_camera_alt" />
         </FrameLayout>
 
-        <!-- Full Name -->
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/full_name"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="20dp"
+            android:hint="@string/full_name">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/nameEditText"
+                style="@style/Widget.App.InputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPersonName"
+                android:autofillHints="name"
                 android:imeOptions="actionNext"
-                android:autofillHints="name" />
+                android:inputType="textPersonName" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Email -->
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="20dp"
+            android:hint="@string/email_address">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/emailEditText"
+                style="@style/Widget.App.InputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"
+                android:autofillHints="emailAddress"
                 android:imeOptions="actionNext"
-                android:autofillHints="emailAddress" />
+                android:inputType="textEmailAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Password -->
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Password"
-            app:passwordToggleEnabled="true"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="20dp"
+            android:hint="@string/password"
+            app:endIconMode="password_toggle">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/passwordEditText"
+                style="@style/Widget.App.InputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textVisiblePassword"
-                android:imeOptions="actionNext" />
+                android:imeOptions="actionNext"
+                android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Phone -->
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/phone_number"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="20dp"
+            android:hint="@string/phone_number">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/phoneEditText"
+                style="@style/Widget.App.InputEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="phone"
+                android:autofillHints="phone"
                 android:imeOptions="actionNext"
-                android:autofillHints="phone" />
+                android:inputType="phone" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Roll + Reg -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.App.InputLayout"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:hint="@string/class_roll"
-                android:layout_marginEnd="8dp">
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:hint="@string/class_roll">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/rollEditText"
+                    style="@style/Widget.App.InputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:imeOptions="actionNext" />
+                    android:imeOptions="actionNext"
+                    android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.App.InputLayout"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:hint="@string/registration_number"
-                android:layout_marginStart="8dp">
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:hint="@string/registration_number">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/regNoEditText"
+                    style="@style/Widget.App.InputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:imeOptions="actionNext" />
+                    android:imeOptions="actionNext"
+                    android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
-        <!-- Year + Section Dropdowns -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="32dp">
+            android:layout_marginBottom="32dp"
+            android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/yearLayout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                style="@style/Widget.App.InputLayout.Dropdown"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:hint="@string/year"
-                android:layout_marginEnd="8dp">
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:hint="@string/year">
 
                 <AutoCompleteTextView
                     android:id="@+id/yearDropdown"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="none"
                     android:completionThreshold="1"
-                    android:dropDownHeight="wrap_content" />
+                    android:dropDownHeight="wrap_content"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/sectionLayout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                style="@style/Widget.App.InputLayout.Dropdown"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:hint="@string/section"
-                android:layout_marginStart="8dp">
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:hint="@string/section">
 
                 <AutoCompleteTextView
                     android:id="@+id/sectionDropdown"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="none"
                     android:completionThreshold="1"
-                    android:dropDownHeight="wrap_content" />
+                    android:dropDownHeight="wrap_content"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
-        <!-- Sign Up -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/registerButton"
-            style="@style/Widget.MaterialComponents.Button"
+            style="@style/Widget.App.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="56dp"
+            android:layout_marginBottom="24dp"
             android:text="@string/create_account"
-            android:textAllCaps="false"
             android:textSize="16sp"
-            app:cornerRadius="28dp"
-            app:backgroundTint="?attr/colorPrimary"
-            android:layout_marginBottom="24dp" />
+            app:cornerRadius="28dp" />
 
-        <!-- Login link -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="40dp"
             android:gravity="center"
-            android:layout_marginBottom="40dp">
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -261,12 +254,12 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/sign_in"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="15sp"
                 android:minHeight="0dp"
                 android:minWidth="0dp"
-                android:paddingHorizontal="4dp" />
+                android:paddingHorizontal="4dp"
+                android:text="@string/sign_in"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="15sp" />
         </LinearLayout>
 
         <Space
