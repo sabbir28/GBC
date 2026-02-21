@@ -13,6 +13,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.time.Duration;
+import java.time.Instant;
 
 import sabbir.apk.InterNet.API.Thread.GitHubExecutor;
 import sabbir.apk.InterNet.Deta.ReleaseAssetInfo;
@@ -26,8 +28,28 @@ public final class Updater {
 
     private static final int MAX_IGNORE_COUNT = 3;
     private static final long IGNORE_COOLDOWN_MS = 24L * 60 * 60 * 1000; // 24 hours
+    /** Minimum age of update (ms) before showing the dialog. */
+    public static final long MIN_AGE_TO_SHOW_MS = 2L * 60 * 60 * 1000; // 2 hours
+    /** Minimum age of update (ms) before we may force the user to update. */
+    private static final long MIN_AGE_TO_FORCE_MS = 2L * 24 * 60 * 60 * 1000; // 2 days
     private static final String KEY_IGNORE_COUNT = "ignore_count";
     private static final String KEY_LAST_IGNORE_TIME = "last_ignore_time";
+
+    /**
+     * Returns the age of the update in milliseconds, or -1 if unknown (null/empty or parse failure).
+     */
+    public static long getUpdateAgeMillis(String updatedAt) {
+        if (updatedAt == null || updatedAt.trim().isEmpty()) {
+            return -1L;
+        }
+        try {
+            Instant updated = Instant.parse(updatedAt.trim());
+            long ageMs = Duration.between(updated, Instant.now()).toMillis();
+            return ageMs < 0 ? -1L : ageMs;
+        } catch (Exception e) {
+            return -1L;
+        }
+    }
 
     public interface Sha256Callback {
         void onSuccess(String sha256);
@@ -201,6 +223,20 @@ public final class Updater {
 
 
     public static boolean canIgnoreUpdate(Context context) {
+        return canIgnoreUpdate(context, null);
+    }
+
+    /**
+     * Returns true if the user may dismiss the update (Remind Later). If updateUpdatedAt is
+     * non-null and the update is less than 2 days old, the user can always dismiss. Otherwise
+     * the existing ignore count and cooldown apply.
+     */
+    public static boolean canIgnoreUpdate(Context context, String updateUpdatedAt) {
+        long ageMillis = getUpdateAgeMillis(updateUpdatedAt);
+        if (ageMillis >= 0 && ageMillis < MIN_AGE_TO_FORCE_MS) {
+            return true;
+        }
+
         SharedPreferences prefs =
                 context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
 

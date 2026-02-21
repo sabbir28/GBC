@@ -66,6 +66,15 @@ public final class HomeUpdateController {
                     @Override
                     public void onSuccess(ReleaseAssetInfo latest) {
                         if (!installedSha256.equals(latest.sha256)) {
+                            long ageMillis = Updater.getUpdateAgeMillis(latest.updatedAt);
+                            if (ageMillis < 0) {
+                                Log.i(TAG, "Update available but updatedAt unknown - not showing dialog");
+                                return;
+                            }
+                            if (ageMillis < Updater.MIN_AGE_TO_SHOW_MS) {
+                                Log.i(TAG, "Update available but only " + (ageMillis / 60_000) + " min old - waiting until 2 hours");
+                                return;
+                            }
                             Log.i(TAG, "Update available - SHA mismatch");
                             pendingUpdateAsset = latest;
                             activity.runOnUiThread(() -> showUpdateDialog(latest));
@@ -130,7 +139,7 @@ public final class HomeUpdateController {
         );
 
         btnLater.setOnClickListener(v -> {
-            if (!Updater.canIgnoreUpdate(activity.getApplicationContext())) {
+            if (!Updater.canIgnoreUpdate(activity.getApplicationContext(), latest.updatedAt)) {
                 Toast.makeText(activity, "Update is required to continue", Toast.LENGTH_LONG).show();
                 return;
             }
@@ -244,8 +253,11 @@ public final class HomeUpdateController {
     }
 
     private String formatTimeSince(String isoUtcTime) {
+        if (isoUtcTime == null || isoUtcTime.trim().isEmpty()) {
+            return "Unknown date";
+        }
         try {
-            Instant updated = Instant.parse(isoUtcTime);
+            Instant updated = Instant.parse(isoUtcTime.trim());
             Instant now = Instant.now();
             long minutes = Duration.between(updated, now).toMinutes();
 
