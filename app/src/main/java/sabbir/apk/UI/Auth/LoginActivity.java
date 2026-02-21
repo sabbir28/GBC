@@ -21,6 +21,7 @@ import org.json.JSONObject;
 
 import sabbir.apk.MainActivity;
 import sabbir.apk.R;
+import sabbir.apk.UI.FeedbackHelper;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -62,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        loginButton.setOnClickListener(v -> attemptLogin());
+        FeedbackHelper.setPrimaryButtonWithFeedback(loginButton, this::attemptLogin);
 
         forgotPasswordButton.setOnClickListener(v -> {
             Toast.makeText(this, "Forgot password clicked", Toast.LENGTH_SHORT).show();
@@ -70,6 +71,7 @@ public class LoginActivity extends AppCompatActivity {
 
         registerButton.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+            overridePendingTransition(R.anim.activity_fade_slide_in, R.anim.activity_fade_slide_out);
         });
     }
 
@@ -82,6 +84,7 @@ public class LoginActivity extends AppCompatActivity {
         Auth.loginAsync(email, password, (statusCode, responseBody) -> {
             runOnUiThread(() -> {
                 if (statusCode == 200) {
+                    FeedbackHelper.playSuccessSound(LoginActivity.this);
                     Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
 
                     // Save token only if user opted in
@@ -141,6 +144,7 @@ public class LoginActivity extends AppCompatActivity {
     private void navigateToHome() {
         startActivity(new Intent(LoginActivity.this, MainActivity.class));
         finish();
+        overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
     }
 
     private String getTrimmedText(TextInputEditText editText) {

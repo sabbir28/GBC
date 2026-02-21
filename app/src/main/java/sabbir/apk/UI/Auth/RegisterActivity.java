@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 import sabbir.apk.R;
+import sabbir.apk.UI.FeedbackHelper;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -100,10 +101,11 @@ public class RegisterActivity extends AppCompatActivity {
         cameraIcon.setOnClickListener(v -> openGallery());
         profileImageView.setOnClickListener(v -> openGallery());
 
-        registerButton.setOnClickListener(v -> register());
+        FeedbackHelper.setPrimaryButtonWithFeedback(registerButton, this::register);
         loginLinkButton.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
+            overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
         });
     }
 
@@ -176,9 +178,11 @@ public class RegisterActivity extends AppCompatActivity {
                 (status, body) -> {
                     registerButton.setEnabled(true);
                     if (status == 200) {
+                        FeedbackHelper.playSuccessSound(RegisterActivity.this);
                         Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_LONG).show();
                         startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                         finish();
+                        overridePendingTransition(R.anim.activity_fade_slide_in, R.anim.activity_fade_slide_out);
                     } else {
                         RegistrationError error = new RegistrationError(body);
                         Toast.makeText(RegisterActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();

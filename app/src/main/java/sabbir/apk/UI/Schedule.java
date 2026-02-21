@@ -71,7 +71,10 @@ public class Schedule extends AppCompatActivity {
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar_schedule);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(view -> finish());
+        toolbar.setNavigationOnClickListener(view -> {
+            finish();
+            overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
+        });
 
         scheduleContainer = findViewById(R.id.schedule_container);
         scheduleStatus = findViewById(R.id.tv_schedule_status);

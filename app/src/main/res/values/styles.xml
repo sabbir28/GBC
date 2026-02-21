@@ -50,6 +50,7 @@
         <item name="cardCornerRadius">@dimen/radius_sm</item>
         <item name="cardElevation">0dp</item>
         <item name="cardBackgroundColor">@color/colorSurface</item>
+        <item name="android:alpha">0.88</item>
     </style>
 
     <!-- Chip: accent (muted plum) for status -->

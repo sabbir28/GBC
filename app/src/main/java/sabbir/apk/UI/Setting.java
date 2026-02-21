@@ -51,7 +51,10 @@ public class Setting extends AppCompatActivity {
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar_settings);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(view -> finish());
+        toolbar.setNavigationOnClickListener(view -> {
+            finish();
+            overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
+        });
 
         switchNotifications = findViewById(R.id.switch_notification);
         switchSms = findViewById(R.id.switch_sms);
@@ -103,6 +106,7 @@ public class Setting extends AppCompatActivity {
 
         ProfileSetting.setOnClickListener(view -> {
             startActivity(new Intent(this, ProfileActivity.class));
+            overridePendingTransition(R.anim.activity_fade_slide_in, R.anim.activity_fade_slide_out);
         });
     }
 

@@ -20,6 +20,7 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 
 import sabbir.apk.MainActivity;
 import sabbir.apk.R;
+import sabbir.apk.UI.FeedbackHelper;
 
 public final class NoInternetActivity extends AppCompatActivity {
 
@@ -39,7 +40,7 @@ public final class NoInternetActivity extends AppCompatActivity {
 
         Button retryButton = findViewById(R.id.btn_retry);
 
-        retryButton.setOnClickListener(v -> {
+        FeedbackHelper.setPrimaryButtonWithFeedback(retryButton, () -> {
             logRetryClick();
             if (isInternetAvailable(this)) {
                 navigateToSplash();
@@ -69,6 +70,7 @@ public final class NoInternetActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+        overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
     }
 
     private void registerNetworkObserver() {

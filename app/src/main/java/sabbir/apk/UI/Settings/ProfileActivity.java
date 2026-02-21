@@ -19,6 +19,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.util.Arrays;
 
 import sabbir.apk.R;
+import sabbir.apk.UI.FeedbackHelper;
 
 public class ProfileActivity extends AppCompatActivity {
 
@@ -47,13 +48,16 @@ public class ProfileActivity extends AppCompatActivity {
         setupDropdowns();
         bindUserValues();
 
-        saveButton.setOnClickListener(v -> saveProfile());
+        FeedbackHelper.setPrimaryButtonWithFeedback(saveButton, this::saveProfile);
     }
 
     private void setupToolbar() {
         MaterialToolbar toolbar = findViewById(R.id.toolbar_settings);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(v -> finish());
+        toolbar.setNavigationOnClickListener(v -> {
+            finish();
+            overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
+        });
     }
 
     private void initViews() {
@@ -93,6 +97,7 @@ public class ProfileActivity extends AppCompatActivity {
         if (token == null || token.trim().isEmpty()) {
             Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_LONG).show();
             finish();
+            overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
             return;
         }
 
@@ -117,10 +122,12 @@ public class ProfileActivity extends AppCompatActivity {
                     saveButton.setText(R.string.save_changes);
 
                     if (statusCode == 200) {
+                        FeedbackHelper.playSuccessSound(ProfileActivity.this);
                         userManager.saveUser(name, email, year, section, phone, classRoll, regNo,
                                 userManager.getUserImageKey(), userManager.getUserImageBase64());
                         Toast.makeText(this, R.string.profile_saved_success, Toast.LENGTH_SHORT).show();
                         finish();
+                        overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_slide_out);
                     } else {
                         EditProfileError error = new EditProfileError(responseBody);
                         Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();

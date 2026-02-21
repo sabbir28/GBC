@@ -57,6 +57,7 @@ public final class HomeScheduleController {
     private final TextView tvCurrentTime;
     private final View upcomingHeader;
     private final View pastHeader;
+    private final View loadingView;
     private final ReminderSchedulerHost host;
 
     private Handler uiTickHandler;
@@ -75,6 +76,7 @@ public final class HomeScheduleController {
             @NonNull TextView tvCurrentTime,
             View upcomingHeader,
             View pastHeader,
+            View loadingView,
             @NonNull ReminderSchedulerHost host
     ) {
         this.cardCurrentClass = cardCurrentClass;
@@ -85,11 +87,13 @@ public final class HomeScheduleController {
         this.tvCurrentTime = tvCurrentTime;
         this.upcomingHeader = upcomingHeader;
         this.pastHeader = pastHeader;
+        this.loadingView = loadingView;
         this.host = host;
         validateTimeSlots();
     }
 
     public void renderTodaySchedule(JSONObject root) throws JSONException {
+        hideLoading();
         JSONObject scheduleObj = root.getJSONObject("schedule");
         DayOfWeek today = LocalDate.now().getDayOfWeek();
         JSONArray todayArray = scheduleObj.optJSONArray(today.name());
@@ -207,7 +211,14 @@ public final class HomeScheduleController {
         tvCurrentTime.setText("Morning session finished");
     }
 
+    private void hideLoading() {
+        if (loadingView != null) {
+            loadingView.setVisibility(View.GONE);
+        }
+    }
+
     private void showEmptyState(String message) {
+        hideLoading();
         cardCurrentClass.setVisibility(View.VISIBLE);
         tvCurrentSubject.setText(message);
         tvCurrentInstructor.setText("");

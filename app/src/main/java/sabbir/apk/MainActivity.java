@@ -28,6 +28,7 @@ import org.json.JSONObject;
 import sabbir.apk.InterNet.API.GitHub.RoutineManagerApi;
 import sabbir.apk.InterNet.API.Thread.GitHubExecutor;
 import sabbir.apk.InterNet.Deta.GitHubApi;
+import sabbir.apk.R;
 import sabbir.apk.UI.Auth.LoginActivity;
 import sabbir.apk.UI.HomeActivity;
 import sabbir.apk.UI.NoInternetActivity;
@@ -124,6 +125,7 @@ public final class MainActivity extends AppCompatActivity {
         navigationHandled = true;
         startActivity(new Intent(this, LoginActivity.class));
         finish();
+        overridePendingTransition(R.anim.activity_fade_slide_in, R.anim.activity_fade_slide_out);
     }
 
     private void goNoInternet() {
@@ -131,6 +133,7 @@ public final class MainActivity extends AppCompatActivity {
         navigationHandled = true;
         startActivity(new Intent(this, NoInternetActivity.class));
         finish();
+        overridePendingTransition(R.anim.activity_fade_slide_in, R.anim.activity_fade_slide_out);
     }
 
     private void navigateHomeDelayed() {
@@ -139,6 +142,7 @@ public final class MainActivity extends AppCompatActivity {
         handler.postDelayed(() -> {
             startActivity(new Intent(this, HomeActivity.class));
             finish();
+            overridePendingTransition(R.anim.activity_fade_slide_in, R.anim.activity_fade_slide_out);
         }, MIN_SPLASH_MS);
     }
 

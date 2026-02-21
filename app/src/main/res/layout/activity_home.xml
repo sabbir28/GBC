@@ -42,11 +42,21 @@
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
 
+                <ProgressBar
+                    android:id="@+id/progress_loading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:minHeight="@dimen/spacing_xl"
+                    android:indeterminateTint="@color/colorPrimary"
+                    android:visibility="visible" />
+
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_current_class"
                     style="@style/Widget.App.Card.Current"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <LinearLayout
                         android:layout_width="match_parent"

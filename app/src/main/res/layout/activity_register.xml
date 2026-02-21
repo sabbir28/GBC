@@ -17,19 +17,19 @@
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="32dp" />
+            android:layout_height="@dimen/spacing_xl" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="40dp"
+            android:layout_marginBottom="@dimen/spacing_lg"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_md"
                 android:text="@string/create_account"
                 android:textColor="@color/colorOnBackground"
                 android:textSize="24sp"
@@ -38,7 +38,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="@dimen/spacing_xs"
                 android:text="@string/register_subtitle"
                 android:textColor="@color/colorOnSurfaceVariant"
                 android:textSize="16sp" />
@@ -64,13 +64,13 @@
 
             <ImageView
                 android:id="@+id/cameraIcon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/touch_target_min"
+                android:layout_height="@dimen/touch_target_min"
                 android:layout_gravity="bottom|end"
                 android:background="@drawable/bg_dialog_round"
                 android:backgroundTint="@color/colorAccent"
-                android:elevation="4dp"
-                android:padding="8dp"
+                android:elevation="@dimen/elevation_card"
+                android:padding="@dimen/spacing_sm"
                 android:src="@drawable/ic_camera_alt" />
         </FrameLayout>
 
@@ -78,7 +78,7 @@
             style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="@dimen/spacing_md"
             android:hint="@string/full_name">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -95,7 +95,7 @@
             style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="@dimen/spacing_md"
             android:hint="@string/email_address">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -112,7 +112,7 @@
             style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="@dimen/spacing_md"
             android:hint="@string/password"
             app:endIconMode="password_toggle">
 
@@ -129,7 +129,7 @@
             style="@style/Widget.App.InputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="@dimen/spacing_md"
             android:hint="@string/phone_number">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -145,7 +145,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="@dimen/spacing_md"
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
@@ -239,7 +239,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="40dp"
+            android:layout_marginBottom="@dimen/spacing_lg"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -264,7 +264,7 @@
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="32dp" />
+            android:layout_height="@dimen/spacing_xl" />
 
     </LinearLayout>
 </ScrollView>

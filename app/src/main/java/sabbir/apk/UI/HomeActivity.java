@@ -91,6 +91,7 @@ public final class HomeActivity extends AppCompatActivity {
                 tvCurrentTime,
                 findViewById(R.id.tv_upcoming_header),
                 findViewById(R.id.tv_previous_header),
+                findViewById(R.id.progress_loading),
                 (items, date) -> {
                     ReminderScheduler.scheduleTodayReminders(this, items, date);
                     logRoutineViewed("today_schedule", items.size());
@@ -241,6 +242,7 @@ public final class HomeActivity extends AppCompatActivity {
         Class<?> destination = itemId == R.id.menu_schedule ? Schedule.class : Setting.class;
         startActivity(new Intent(this, destination)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+        overridePendingTransition(R.anim.activity_fade_slide_in, R.anim.activity_fade_slide_out);
     }
 
     @Override
