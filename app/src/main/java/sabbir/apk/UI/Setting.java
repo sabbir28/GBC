@@ -2,11 +2,19 @@ package sabbir.apk.UI;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Patterns;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.atwebpages.sabbir28.Auth;
+import com.atwebpages.sabbir28.Core.TokenManager;
+import com.atwebpages.sabbir28.Core.UserManager;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import sabbir.apk.R;
@@ -25,6 +33,18 @@ public class Setting extends AppCompatActivity {
     private SwitchMaterial switchClassReminders;
     private SwitchMaterial switchMorningAlarm;
 
+    private TextInputEditText editName;
+    private TextInputEditText editEmail;
+    private TextInputEditText editPhone;
+    private TextInputEditText editRoll;
+    private TextInputEditText editRegNo;
+    private TextInputEditText editYear;
+    private TextInputEditText editSection;
+    private MaterialButton saveProfileButton;
+
+    private TokenManager tokenManager;
+    private UserManager userManager;
+
     private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
@@ -35,6 +55,9 @@ public class Setting extends AppCompatActivity {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         logScreenView();
 
+        tokenManager = new TokenManager(this);
+        userManager = new UserManager(this);
+
         MaterialToolbar toolbar = findViewById(R.id.toolbar_settings);
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(view -> finish());
@@ -43,6 +66,18 @@ public class Setting extends AppCompatActivity {
         switchSms = findViewById(R.id.switch_sms);
         switchClassReminders = findViewById(R.id.switch_class_reminders);
         switchMorningAlarm = findViewById(R.id.switch_morning_alarm);
+
+        editName = findViewById(R.id.edit_name);
+        editEmail = findViewById(R.id.edit_email);
+        editPhone = findViewById(R.id.edit_phone);
+        editRoll = findViewById(R.id.edit_roll);
+        editRegNo = findViewById(R.id.edit_reg_no);
+        editYear = findViewById(R.id.edit_year);
+        editSection = findViewById(R.id.edit_section);
+        saveProfileButton = findViewById(R.id.btn_save_profile);
+
+        populateProfileFields();
+        setupProfileUpdateAction();
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         boolean notificationsEnabled = prefs.getBoolean(KEY_NOTIFICATIONS, true);
@@ -78,6 +113,63 @@ public class Setting extends AppCompatActivity {
         });
     }
 
+    private void populateProfileFields() {
+        editName.setText(orEmpty(userManager.getUserName()));
+        editEmail.setText(orEmpty(userManager.getUserEmail()));
+        editPhone.setText(orEmpty(userManager.getUserPhone()));
+        editRoll.setText(orEmpty(userManager.getUserClassRoll()));
+        editRegNo.setText(orEmpty(userManager.getUserRegNo()));
+        editYear.setText(orEmpty(userManager.getUserYear()));
+        editSection.setText(orEmpty(userManager.getUserSection()));
+    }
+
+    private void setupProfileUpdateAction() {
+        saveProfileButton.setOnClickListener(v -> {
+            String token = tokenManager.getToken();
+            if (TextUtils.isEmpty(token)) {
+                Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            String name = valueOf(editName);
+            String email = valueOf(editEmail);
+            String phone = valueOf(editPhone);
+            String roll = valueOf(editRoll);
+            String regNo = valueOf(editRegNo);
+            String year = valueOf(editYear);
+            String section = valueOf(editSection);
+
+            if (!TextUtils.isEmpty(email) && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                editEmail.setError("Enter a valid email");
+                return;
+            }
+            editEmail.setError(null);
+
+            saveProfileButton.setEnabled(false);
+            Auth.editProfileAsync(token, name, email, phone, roll, regNo, year, section, null,
+                    (statusCode, responseBody) -> runOnUiThread(() -> {
+                        saveProfileButton.setEnabled(true);
+                        if (statusCode == 200) {
+                            userManager.saveUser(name, email, year, section, phone, roll, regNo,
+                                    userManager.getUserImageKey(), userManager.getUserImageBase64());
+                            Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show();
+                            logProfileUpdated(true);
+                        } else {
+                            Toast.makeText(this, "Failed to update profile", Toast.LENGTH_LONG).show();
+                            logProfileUpdated(false);
+                        }
+                    }));
+        });
+    }
+
+    private String valueOf(TextInputEditText input) {
+        return input.getText() == null ? "" : input.getText().toString().trim();
+    }
+
+    private String orEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
     private void updateReminderAvailability(boolean notificationsEnabled, SharedPreferences prefs) {
         if (!notificationsEnabled) {
             switchSms.setChecked(false);
@@ -92,8 +184,6 @@ public class Setting extends AppCompatActivity {
         switchMorningAlarm.setEnabled(notificationsEnabled);
     }
 
-    // ------------------- Firebase Analytics Methods -------------------
-
     private void logScreenView() {
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, "SettingActivity");
@@ -106,5 +196,11 @@ public class Setting extends AppCompatActivity {
         bundle.putString("preference_key", key);
         bundle.putBoolean("preference_value", value);
         mFirebaseAnalytics.logEvent("preference_changed", bundle);
+    }
+
+    private void logProfileUpdated(boolean success) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("success", success);
+        mFirebaseAnalytics.logEvent("profile_updated", bundle);
     }
 }
