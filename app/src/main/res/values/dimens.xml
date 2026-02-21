@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 8dp spacing system -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+
+    <!-- Corner radii: 14–18dp -->
+    <dimen name="radius_sm">14dp</dimen>
+    <dimen name="radius_md">16dp</dimen>
+    <dimen name="radius_lg">18dp</dimen>
+
+    <!-- Touch targets ≥ 48dp -->
+    <dimen name="touch_target_min">48dp</dimen>
+    <dimen name="button_min_height">48dp</dimen>
+
+    <!-- Elevation (subtle) -->
+    <dimen name="elevation_surface">2dp</dimen>
+    <dimen name="elevation_card">4dp</dimen>
+    <dimen name="elevation_toolbar">4dp</dimen>
+</resources>

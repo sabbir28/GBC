@@ -30,8 +30,7 @@ public class RoutineWidgetProvider extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            RemoteViews views = buildRemoteViews(context);
-            appWidgetManager.updateAppWidget(appWidgetId, views);
+            appWidgetManager.updateAppWidget(appWidgetId, buildRemoteViews(context));
         }
     }
 
@@ -83,31 +82,44 @@ public class RoutineWidgetProvider extends AppWidgetProvider {
     }
 
     private static void setScheduleState(Context context, RemoteViews views) {
-        RoutineWidgetSchedule.ScheduleState state = RoutineWidgetSchedule.loadCurrentState(context);
+        ScheduleState state = RoutineWidgetSchedule.loadCurrentState(context);
+
         DayOfWeek today = LocalDate.now().getDayOfWeek();
-        String day = today.name().substring(0, 1) + today.name().substring(1).toLowerCase(Locale.getDefault());
+        String day = today.name().substring(0, 1)
+                + today.name().substring(1).toLowerCase(Locale.getDefault());
         views.setTextViewText(R.id.tv_widget_day, day);
 
         switch (state.type) {
             case CURRENT:
                 views.setTextViewText(R.id.tv_widget_title, state.subject);
-                views.setTextViewText(R.id.tv_widget_subtitle,
-                        "Now with " + state.instructor + " • Ends " + state.timeText);
+                views.setTextViewText(
+                        R.id.tv_widget_subtitle,
+                        "Now with " + state.instructor + " • Ends " + state.timeText
+                );
                 break;
+
             case UPCOMING:
                 views.setTextViewText(R.id.tv_widget_title, "Next: " + state.subject);
-                views.setTextViewText(R.id.tv_widget_subtitle,
-                        state.instructor + " • Starts " + state.timeText);
+                views.setTextViewText(
+                        R.id.tv_widget_subtitle,
+                        state.instructor + " • Starts " + state.timeText
+                );
                 break;
+
             case FINISHED:
                 views.setTextViewText(R.id.tv_widget_title, "All classes completed");
                 views.setTextViewText(R.id.tv_widget_subtitle, "Morning session finished");
                 break;
+
             case EMPTY:
             default:
                 views.setTextViewText(R.id.tv_widget_title, "No classes scheduled today");
-                views.setTextViewText(R.id.tv_widget_subtitle,
-                        RoutineManagerApi.routineFileExists(context) ? "Enjoy your free day" : "Open app to sync routine");
+                views.setTextViewText(
+                        R.id.tv_widget_subtitle,
+                        RoutineManagerApi.routineFileExists(context)
+                                ? "Enjoy your free day"
+                                : "Open app to sync routine"
+                );
                 break;
         }
     }
@@ -126,6 +138,8 @@ public class RoutineWidgetProvider extends AppWidgetProvider {
     private static String safe(String value, String fallback) {
         return value == null || value.trim().isEmpty() ? fallback : value.trim();
     }
+
+    /* ===================== SCHEDULING ===================== */
 
     static final class RoutineWidgetSchedule {
 
@@ -153,7 +167,8 @@ public class RoutineWidgetProvider extends AppWidgetProvider {
 
             try {
                 org.json.JSONObject schedule = routine.getJSONObject("schedule");
-                org.json.JSONArray today = schedule.optJSONArray(LocalDate.now().getDayOfWeek().name());
+                org.json.JSONArray today =
+                        schedule.optJSONArray(LocalDate.now().getDayOfWeek().name());
 
                 if (today == null || today.length() == 0) {
                     return ScheduleState.empty();
@@ -164,41 +179,55 @@ public class RoutineWidgetProvider extends AppWidgetProvider {
 
                 for (int i = 0; i < Math.min(today.length(), SLOT_STARTS.length); i++) {
                     org.json.JSONObject item = today.getJSONObject(i);
-                    String subject = sanitizeSubject(item.optString("subject_name", "Free Period"));
+                    String subject = sanitizeSubject(
+                            item.optString("subject_name", "Free Period")
+                    );
                     String instructor = item.optString("instructor_name", "—");
 
                     LocalTime start = SLOT_STARTS[i];
                     LocalTime end = SLOT_ENDS[i];
 
                     if (!now.isBefore(start) && now.isBefore(end)) {
-                        return ScheduleState.current(subject, instructor, end.format(TIME_FORMATTER));
+                        return ScheduleState.current(
+                                subject,
+                                instructor,
+                                end.format(TIME_FORMATTER)
+                        );
                     }
 
                     if (now.isBefore(start) && firstUpcoming == null) {
-                        firstUpcoming = ScheduleState.upcoming(subject, instructor, start.format(TIME_FORMATTER));
+                        firstUpcoming = ScheduleState.upcoming(
+                                subject,
+                                instructor,
+                                start.format(TIME_FORMATTER)
+                        );
                     }
                 }
 
-                if (firstUpcoming != null) {
-                    return firstUpcoming;
-                }
+                return firstUpcoming != null
+                        ? firstUpcoming
+                        : ScheduleState.finished();
 
-                return ScheduleState.finished();
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 return ScheduleState.empty();
             }
         }
 
         private static String sanitizeSubject(String subject) {
-            if ("null".equals(subject)) {
-                return "Free Period";
-            }
-            return subject;
+            return "null".equals(subject) ? "Free Period" : subject;
         }
     }
 
+    /* ===================== STATE MODEL ===================== */
+
     static final class ScheduleState {
-        enum Type {CURRENT, UPCOMING, FINISHED, EMPTY}
+
+        enum Type {
+            CURRENT,
+            UPCOMING,
+            FINISHED,
+            EMPTY
+        }
 
         final Type type;
         final String subject;
