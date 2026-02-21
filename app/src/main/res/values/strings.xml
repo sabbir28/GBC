@@ -19,6 +19,7 @@
     <string name="reminder_instructor_label">Instructor: %1$s</string>
     <string name="reminder_time_label">Time: %1$s</string>
     <string name="reminder_channel_description">Notifications for class reminders and morning alarms.</string>
+    <string name="routine_widget_description">GBC daily routine overview</string>
 
     <string name="create_account">Create Account</string>
     <string name="full_name">Full Name</string>
