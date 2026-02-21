@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="GBC daily routine overview"
+    android:initialLayout="@layout/widget_routine"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:previewImage="@drawable/bm_college_logo"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />
