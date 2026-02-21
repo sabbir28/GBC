@@ -47,4 +47,39 @@
         <item name="chipIconVisible">false</item>
         <item name="android:clickable">false</item>
     </style>
+
+    <style name="Widget.App.InputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/colorPrimary</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="hintTextColor">@color/colorPrimaryVariant</item>
+        <item name="helperTextTextColor">@color/colorPrimaryVariant</item>
+        <item name="errorTextColor">@color/colorError</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.Input</item>
+    </style>
+
+    <style name="Widget.App.InputLayout.Dropdown" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxStrokeColor">@color/colorPrimary</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.Input</item>
+    </style>
+
+    <style name="ShapeAppearance.App.Input" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style name="Widget.App.InputEditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/colorOnSurface</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="Widget.App.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="cornerRadius">16dp</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/colorOnPrimary</item>
+        <item name="android:minHeight">52dp</item>
+    </style>
 </resources>

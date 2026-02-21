@@ -30,4 +30,19 @@
     <string name="profile_picture">Profile Picture</string>
     <string name="already_have_account">Already have an account?</string>
     <string name="sign_in">Sign In</string>
+
+    <string name="register_subtitle">Please fill in your details</string>
+    <string name="email_address">Email</string>
+    <string name="password">Password</string>
+    <string name="profile_edit_title">Edit Profile</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="saving_profile">Saving...</string>
+    <string name="profile_saved_success">Profile updated successfully</string>
+    <string name="validation_name_required">Full name is required</string>
+    <string name="validation_email_invalid">Enter a valid email</string>
+    <string name="validation_phone_invalid">Enter a valid phone number</string>
+    <string name="validation_year_invalid">Select a valid year</string>
+    <string name="validation_section_invalid">Select a valid section</string>
+    <string name="validation_roll_required">Class roll is required</string>
+    <string name="validation_reg_required">Registration number is required</string>
 </resources>
