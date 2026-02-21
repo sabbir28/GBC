@@ -124,7 +124,7 @@ public class ReminderService extends Service {
         );
         channel.setDescription(getString(R.string.reminder_channel_description));
         channel.enableLights(true);
-        channel.setLightColor(Color.parseColor("#F59E0B"));
+        channel.setLightColor(androidx.core.content.ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
         channel.enableVibration(true);
         manager.createNotificationChannel(channel);
     }

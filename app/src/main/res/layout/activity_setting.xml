@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorSurface"
-        android:elevation="6dp"
+        android:elevation="@dimen/elevation_toolbar"
         android:theme="@style/ThemeOverlay.MaterialComponents.ActionBar"
         android:title="Settings"
         android:titleTextColor="@color/colorOnSurface"
@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_md">
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.App.Card.Upcoming"
@@ -41,7 +41,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp"
+                    android:padding="@dimen/spacing_md"
                     android:visibility="visible"
                     android:gravity="center_vertical">
 
@@ -91,7 +91,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/spacing_md">
 
                     <TextView
                         style="@style/TextAppearance.App.SectionHeader"
@@ -119,7 +119,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_schedule_24"
-                                app:tint="@color/colorPrimary" />
+                                app:tint="@color/colorAccent" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
@@ -172,7 +172,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_today_24"
-                                app:tint="@color/colorWarning" />
+                                app:tint="@color/colorAccent" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
@@ -225,7 +225,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_schedule_24"
-                                app:tint="@color/colorPrimaryVariant" />
+                                app:tint="@color/colorAccent" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
@@ -278,7 +278,7 @@
                                 android:layout_height="match_parent"
                                 android:padding="8dp"
                                 android:src="@drawable/ic_today_24"
-                                app:tint="@color/colorWarning" />
+                                app:tint="@color/colorAccent" />
                         </com.google.android.material.card.MaterialCardView>
 
                         <LinearLayout
@@ -317,7 +317,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/spacing_md">
 
                     <TextView
                         style="@style/TextAppearance.App.SectionHeader"

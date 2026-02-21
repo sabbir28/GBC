@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorSurface"
-        android:elevation="6dp"
+        android:elevation="@dimen/elevation_toolbar"
         android:theme="@style/ThemeOverlay.MaterialComponents.ActionBar"
         android:title="Schedule"
         android:titleTextColor="@color/colorOnSurface"
@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_md">
 
             <TextView
                 android:id="@+id/tv_schedule_status"

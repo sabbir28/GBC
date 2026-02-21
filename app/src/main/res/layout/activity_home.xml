@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/colorSurface"
-            android:elevation="6dp"
+            android:elevation="@dimen/elevation_toolbar"
             android:theme="@style/ThemeOverlay.MaterialComponents.ActionBar"
             app:navigationIcon="@drawable/ic_menu_24"
             app:title="Today's Classes"
@@ -37,24 +37,22 @@
                 android:id="@+id/content_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:padding="16dp"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:padding="@dimen/spacing_md"
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
 
-                <!-- CURRENT CLASS (Hero Section) -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_current_class"
                     style="@style/Widget.App.Card.Current"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/colorBackground">
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="@dimen/spacing_md">
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_status"
@@ -69,7 +67,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Principles of Finance"
-                            android:paddingTop="8dp"/>
+                            android:paddingTop="@dimen/spacing_sm"/>
 
                         <TextView
                             android:id="@+id/tv_current_time"
@@ -87,18 +85,14 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- UPCOMING HEADER -->
                 <TextView
                     android:id="@+id/tv_upcoming_header"
                     style="@style/TextAppearance.App.SectionHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upcoming"
-                    android:paddingTop="16dp"/>
+                    android:paddingTop="@dimen/spacing_md"/>
 
-                <!-- UPCOMING CLASSES LIST -->
-
-                <!-- PREVIOUS HEADER -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_upcoming"
                     android:layout_width="match_parent"
@@ -110,10 +104,9 @@
                     style="@style/TextAppearance.App.SectionHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_sm"
                     android:text="Previous"/>
 
-                <!-- PREVIOUS CLASSES LIST -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_previous"
                     android:layout_width="match_parent"

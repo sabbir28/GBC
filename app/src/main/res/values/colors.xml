@@ -1,28 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Primary brand (deep indigo) -->
-    <color name="colorPrimary">#3B4CCA</color>
-    <color name="colorPrimaryVariant">#2B39A4</color>
+    <!-- Primary: Charcoal / Near-black -->
+    <color name="colorPrimary">#1C1C1E</color>
+    <color name="colorPrimaryVariant">#111827</color>
     <color name="colorOnPrimary">#FFFFFF</color>
 
-    <!-- Secondary / accent (warm amber) -->
-    <color name="colorSecondary">#F59E0B</color>
-    <color name="colorSecondaryVariant">#D97706</color>
-    <color name="colorOnSecondary">#1F2933</color>
+    <!-- Secondary: Warm Gray / Stone -->
+    <color name="colorSecondary">#E5E7EB</color>
+    <color name="colorSecondaryVariant">#D6D3D1</color>
+    <color name="colorOnSecondary">#1C1C1E</color>
 
-    <!-- Neutrals -->
-    <color name="colorBackground">#F8FAFC</color>
+    <!-- Accent: Muted Plum (toned-down purple, no saturated blue/green/yellow) -->
+    <color name="colorAccent">#6B5B95</color>
+    <color name="colorAccentVariant">#5A4A7D</color>
+    <color name="colorOnAccent">#FFFFFF</color>
+
+    <!-- Background &amp; surface -->
+    <color name="colorBackground">#FAFAFA</color>
     <color name="colorSurface">#FFFFFF</color>
-    <color name="colorSurfaceVariant">#EEF2FF</color>
-    <color name="colorOnBackground">#0F172A</color>
-    <color name="colorOnSurface">#111827</color>
+    <color name="colorSurfaceVariant">#F0EFED</color>
+    <color name="colorOnBackground">#111827</color>
+    <color name="colorOnSurface">#1C1C1E</color>
+    <color name="colorOnSurfaceVariant">#6B7280</color>
 
-    <!-- Status colors -->
-    <color name="colorError">#D32F2F</color>
+    <!-- Error: Desaturated red -->
+    <color name="colorError">#A63D3D</color>
     <color name="colorOnError">#FFFFFF</color>
-    <color name="colorSuccess">#2E7D32</color>
-    <color name="colorWarning">#ED6C02</color>
+
+    <!-- State / warning (muted, not yellow) -->
+    <color name="colorWarning">#B55C3D</color>
+    <color name="colorSuccess">#6B5B95</color>
 
     <!-- Basics -->
     <color name="black">#000000</color>

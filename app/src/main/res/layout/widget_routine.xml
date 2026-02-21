@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_widget_routine"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="@dimen/spacing_sm">
 
     <TextView
         android:id="@+id/tv_widget_name"
@@ -14,7 +14,7 @@
         android:maxLines="1"
         android:textColor="@android:color/white"
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:fontFamily="sans-serif-medium" />
 
     <TextView
         android:id="@+id/tv_widget_meta"
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:maxLines="1"
-        android:textColor="#DDE3EB"
+        android:textColor="#B8B8C0"
         android:textSize="12sp" />
 
     <TextView
@@ -30,14 +30,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/circle_background"
+        android:background="@drawable/widget_chip_background"
         android:paddingLeft="8dp"
         android:paddingTop="2dp"
         android:paddingRight="8dp"
         android:paddingBottom="2dp"
         android:textColor="@android:color/white"
         android:textSize="11sp"
-        android:textStyle="bold" />
+        android:fontFamily="sans-serif-medium" />
 
     <TextView
         android:id="@+id/tv_widget_title"
@@ -47,7 +47,7 @@
         android:maxLines="1"
         android:textColor="@android:color/white"
         android:textSize="15sp"
-        android:textStyle="bold" />
+        android:fontFamily="sans-serif-medium" />
 
     <TextView
         android:id="@+id/tv_widget_subtitle"
@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:maxLines="2"
-        android:textColor="#DDE3EB"
+        android:textColor="#B8B8C0"
         android:textSize="12sp" />
 
 </LinearLayout>

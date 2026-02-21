@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingVertical="10dp">
+    android:paddingVertical="@dimen/spacing_sm">
 
     <TextView
         android:id="@+id/tv_entry_time"
@@ -37,6 +37,6 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/spacing_sm"
         android:background="@color/colorSurfaceVariant" />
 </LinearLayout>
